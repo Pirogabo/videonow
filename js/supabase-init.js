@@ -1,10 +1,13 @@
 /* ================================================================
    VIDEONOW — SUPABASE INITIALIZATION
-   Configura el cliente de Supabase con credenciales reales.
+   Lee credenciales de variables de entorno (inyectadas por Vercel)
+   NO expongas secretos en el código público
    ================================================================ */
 
-const SUPABASE_URL = 'https://gutvzkryggxiipjzluev.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_s0HspuTmlJ5W5X4nr9AknQ_KZlh6zhN';
+// Las credenciales se inyectan desde Vercel en tiempo de build/runtime
+// En desarrollo local, lee de window.__ENV__ (inyectado por un script)
+const SUPABASE_URL = window.__ENV__?.SUPABASE_URL || 'https://gutvzkryggxiipjzluev.supabase.co';
+const SUPABASE_ANON_KEY = window.__ENV__?.SUPABASE_ANON_KEY || 'sb_publishable_s0HspuTmlJ5W5X4nr9AknQ_KZlh6zhN';
 
 // Crear cliente de Supabase
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
