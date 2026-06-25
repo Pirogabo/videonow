@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VideoNow - Safety Center</title>
+<meta name="description" content="Safety Center">
+<link rel="icon" href="assets/logo.png">
+<link rel="stylesheet" href="css/main.css">
+
+</head>
+<body data-page="safety">
+
+<header id="header">
+  <a href="index.html" id="logo"><img src="assets/logo.png" alt="VideoNow"></a>
+  <form id="search-form" action="search.html" role="search">
+    <div id="search-wrap">
+      <input type="text" id="search-input" name="q" placeholder="Search" autocomplete="off" maxlength="200" aria-label="Search VideoNow" value="{search_value}">
+      <button type="submit" id="search-btn" aria-label="Search">
+        <svg viewBox="0 0 24 24"><path d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" stroke="#555" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+  </form>
+  <div id="header-right">
+    <a href="browse.html">Browse</a>
+    <span class="hdr-sep">|</span>
+    <a href="movies.html">Movies</a>
+    <span class="hdr-sep">|</span>
+    <a href="#" class="btn-upload-hdr" onclick="openUploadModal(event)">
+      <svg viewBox="0 0 24 24"><path d="M12 16V4m0 0l-4 4m4-4l4 4M4 20h16" stroke="#666" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+      Upload
+    </a>
+    <span id="header-auth-slot" style="display:flex;align-items:center;gap:14px;"></span>
+  </div>
+</header>
+
+<nav id="navbar">
+  <a href="index.html" class="nav-item" data-nav="home">Videos</a>
+  <a href="music.html" class="nav-item" data-nav="music">Music</a>
+  <a href="movies.html" class="nav-item" data-nav="movies">Movies</a>
+  <a href="shows.html" class="nav-item" data-nav="shows">Shows</a>
+  <a href="live.html" class="nav-item" data-nav="live">Live</a>
+  <a href="education.html" class="nav-item" data-nav="education">Education</a>
+  <a href="news.html" class="nav-item" data-nav="news">News</a>
+</nav>
+
+<div id="page-shell">
+  <aside id="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-box">
+        <p>Sign in to add channels to your homepage</p>
+        <a href="login.html" class="btn-sb">Sign in</a>
+        <a href="register.html" class="btn-sb outline">Create account</a>
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <a href="index.html" class="sb-link">
+        <svg viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z" fill="currentColor"/></svg>
+        <span>From VideoNow</span>
+      </a>
+      <a href="trending.html" class="sb-link">
+        <svg viewBox="0 0 24 24"><path d="M3 17l4-8 4 4 4-7 4 4" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+        <span>Trending</span>
+      </a>
+      <a href="popular.html" class="sb-link">
+        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+        <span>Popular</span>
+      </a>
+    </div>
+    <div class="sidebar-section">
+      <a href="music.html" class="sb-link"><span>Music</span></a>
+      <a href="browse.html?cat=entertainment" class="sb-link"><span>Entertainment</span></a>
+      <a href="browse.html?cat=sports" class="sb-link"><span>Sports</span></a>
+      <a href="browse.html?cat=film" class="sb-link"><span>Film &amp; Animation</span></a>
+      <a href="news.html" class="sb-link"><span>News &amp; Politics</span></a>
+      <a href="browse.html?cat=comedy" class="sb-link"><span>Comedy</span></a>
+      <a href="browse.html?cat=people" class="sb-link"><span>People &amp; Blogs</span></a>
+      <a href="education.html" class="sb-link"><span>Science &amp; Technology</span></a>
+      <a href="browse.html?cat=gaming" class="sb-link"><span>Gaming</span></a>
+      <a href="browse.html?cat=howto" class="sb-link"><span>Howto &amp; Style</span></a>
+      <a href="education.html" class="sb-link"><span>Education</span></a>
+      <a href="browse.html?cat=pets" class="sb-link"><span>Pets &amp; Animals</span></a>
+      <a href="browse.html?cat=autos" class="sb-link"><span>Autos &amp; Vehicles</span></a>
+      <a href="browse.html?cat=travel" class="sb-link"><span>Travel &amp; Events</span></a>
+      <a href="browse.html?cat=nonprofit" class="sb-link"><span>Nonprofits &amp; Activism</span></a>
+      <a href="browse.html" class="sb-link" style="color:var(--accent);"><span>See all</span></a>
+    </div>
+    <div class="sidebar-section">
+      <a href="chat.html" class="sb-link"><span>Chats</span></a>
+      <a href="#" class="sb-link" onclick="requireAuth(event)"><span>Subscriptions</span></a>
+      <a href="#" class="sb-link" onclick="requireAuth(event)"><span>Favorites</span></a>
+    </div>
+  </aside>
+  <main id="main">
+    <div style="background:#fff;border:1px solid var(--border);border-radius:2px;padding:20px 24px;">
+      <h2 style="font-size:18px;margin-bottom:12px;">Safety Center</h2>
+      <div style="font-size:13px;color:var(--text-mid);line-height:1.7;max-width:680px;">
+        <p style="margin-bottom:10px;">VideoNow se toma en serio la seguridad de su comunidad. Estas son algunas de las medidas activas:</p>
+        <ul style="margin:10px 0 10px 18px;">
+          <li style="margin-bottom:6px;">Rate limiting en login, registro, comentarios, chat y subidas para prevenir abuso y spam.</li>
+          <li style="margin-bottom:6px;">Verificación de edad mínima (13+) en el registro.</li>
+          <li style="margin-bottom:6px;">Row Level Security en la base de datos — cada usuario solo accede a lo que le corresponde.</li>
+          <li style="margin-bottom:6px;">Moderación de contenido antes de su publicación pública.</li>
+          <li style="margin-bottom:6px;">Sanitización de todo el contenido generado por usuarios (comentarios, chats, nombres).</li>
+        </ul>
+        <p>Si encuentras contenido inapropiado, repórtalo usando el botón de reporte en cada video.</p>
+      </div>
+    </div>
+  </main>
+</div>
+
+<footer id="footer">
+  <div class="footer-logo"><img src="assets/logo.png" alt="VideoNow"></div>
+  <nav class="footer-links">
+    <a href="about.html">About</a>
+    <a href="about.html">Press &amp; Blogs</a>
+    <a href="about.html">Copyright</a>
+    <a href="about.html">Creators &amp; Partners</a>
+    <a href="about.html">Advertising</a>
+    <a href="about.html">Developers</a>
+    <a href="terms.html">Terms</a>
+    <a href="privacy.html">Privacy</a>
+    <a href="safety.html">Safety</a>
+  </nav>
+  <span class="footer-right">&copy; 2026 VideoNow</span>
+</footer>
+
+<div class="modal-overlay" id="modal-upload">
+  <div class="modal">
+    <button class="modal-close" onclick="closeUploadModal()">&times;</button>
+    <h2>Upload a video</h2>
+    <div class="upload-drop" onclick="simulateUpload(event)">
+      <svg viewBox="0 0 24 24"><path d="M12 16V4m0 0l-4 4m4-4l4 4M4 20h16" stroke="#bbb" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+      <p><strong>Click to select a file</strong> or drag and drop</p>
+      <p class="text-muted">MP4, WebM, MOV — max 2GB</p>
+    </div>
+    <div class="progress-bar hidden" id="upload-progress-bar"><div class="progress-fill" id="upload-progress-fill"></div></div>
+    <p class="security-note">🔒 Subidas limitadas a 10/día por cuenta · contenido moderado antes de publicarse</p>
+  </div>
+</div>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script src="js/security.js"></script>
+<script src="js/data.js"></script>
+<script src="js/layout.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,10 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:04.000
+Esto es un subtítulo de demostración.
+
+00:00:04.500 --> 00:00:08.000
+Sustituye este archivo .vtt por los subtítulos reales de tu video.
+
+00:00:08.500 --> 00:00:13.000
+Para subtítulos .ass complejos, usa el campo "kind: 'ass'" — ver js/player.js

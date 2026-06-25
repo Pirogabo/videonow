@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title id="page-title">VideoNow - Channel</title>
+<meta name="description" content="Channel on VideoNow">
+<link rel="icon" href="assets/logo.png">
+<link rel="stylesheet" href="css/main.css">
+</head>
+<body data-page="channel">
+
+<header id="header">
+  <a href="index.html" id="logo"><img src="assets/logo.png" alt="VideoNow"></a>
+  <form id="search-form" action="search.html" role="search">
+    <div id="search-wrap">
+      <input type="text" id="search-input" name="q" placeholder="Search" autocomplete="off" maxlength="200" aria-label="Search VideoNow">
+      <button type="submit" id="search-btn" aria-label="Search">
+        <svg viewBox="0 0 24 24"><path d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" stroke="#555" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+  </form>
+  <div id="header-right">
+    <a href="browse.html">Browse</a>
+    <span class="hdr-sep">|</span>
+    <a href="movies.html">Movies</a>
+    <span class="hdr-sep">|</span>
+    <a href="#" class="btn-upload-hdr" onclick="openUploadModal(event)">
+      <svg viewBox="0 0 24 24"><path d="M12 16V4m0 0l-4 4m4-4l4 4M4 20h16" stroke="#666" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+      Upload
+    </a>
+    <span id="header-auth-slot" style="display:flex;align-items:center;gap:14px;"></span>
+  </div>
+</header>
+
+<nav id="navbar">
+  <a href="index.html" class="nav-item" data-nav="home">Videos</a>
+  <a href="music.html" class="nav-item" data-nav="music">Music</a>
+  <a href="movies.html" class="nav-item" data-nav="movies">Movies</a>
+  <a href="shows.html" class="nav-item" data-nav="shows">Shows</a>
+  <a href="live.html" class="nav-item" data-nav="live">Live</a>
+  <a href="education.html" class="nav-item" data-nav="education">Education</a>
+  <a href="news.html" class="nav-item" data-nav="news">News</a>
+</nav>
+
+<div class="content-offset">
+  <div id="channel-banner"></div>
+  <div id="channel-header">
+    <div id="ch-av-big">?</div>
+    <div id="ch-meta">
+      <div id="ch-name">Channel</div>
+      <div id="ch-stats"></div>
+    </div>
+    <button class="btn-sub" id="ch-sub-btn" onclick="toggleChannelSub()">Subscribe</button>
+  </div>
+  <div class="ch-tabs">
+    <div class="ch-tab active" data-tab="videos" onclick="switchChTab(this,'videos')">Videos</div>
+    <div class="ch-tab" data-tab="about" onclick="switchChTab(this,'about')">About</div>
+  </div>
+
+  <main id="main" style="max-width:1200px;margin:0 auto;">
+    <div id="ch-tab-videos">
+      <div class="video-grid" id="ch-video-grid"></div>
+    </div>
+    <div id="ch-tab-about" class="hidden">
+      <div style="background:#fff;border:1px solid var(--border);border-radius:2px;padding:18px;max-width:600px;">
+        <h3 style="font-size:14px;margin-bottom:10px;">Description</h3>
+        <p id="ch-about-desc" style="font-size:13px;color:var(--text-mid);line-height:1.6;margin-bottom:14px;"></p>
+        <h3 style="font-size:14px;margin-bottom:6px;">Stats</h3>
+        <p id="ch-about-stats" style="font-size:13px;color:var(--text-mid);line-height:1.6;"></p>
+      </div>
+    </div>
+  </main>
+</div>
+
+<footer id="footer">
+  <div class="footer-logo"><img src="assets/logo.png" alt="VideoNow"></div>
+  <nav class="footer-links">
+    <a href="about.html">About</a>
+    <a href="terms.html">Terms</a>
+    <a href="privacy.html">Privacy</a>
+    <a href="safety.html">Safety</a>
+  </nav>
+  <span class="footer-right">&copy; 2026 VideoNow</span>
+</footer>
+
+<div class="modal-overlay" id="modal-upload">
+  <div class="modal">
+    <button class="modal-close" onclick="closeUploadModal()">&times;</button>
+    <h2>Upload a video</h2>
+    <div class="upload-drop" onclick="simulateUpload(event)">
+      <svg viewBox="0 0 24 24"><path d="M12 16V4m0 0l-4 4m4-4l4 4M4 20h16" stroke="#bbb" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+      <p><strong>Click to select a file</strong> or drag and drop</p>
+      <p class="text-muted">MP4, WebM, MOV — max 2GB</p>
+    </div>
+    <div class="progress-bar hidden" id="upload-progress-bar"><div class="progress-fill" id="upload-progress-fill"></div></div>
+    <p class="security-note">🔒 Subidas limitadas a 10/día por cuenta · contenido moderado antes de publicarse</p>
+  </div>
+</div>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script src="js/security.js"></script>
+<script src="js/data.js"></script>
+<script src="js/layout.js"></script>
+<script>
+let chSubbed = false;
+
+function loadChannelPage() {
+  const id = getQueryParam('id') || 'elrubius';
+  const ch = getChannel(id);
+
+  document.getElementById('page-title').textContent = ch.name + ' - VideoNow';
+  document.getElementById('channel-banner').style.background = `linear-gradient(135deg, ${ch.color}33, ${ch.color}11)`;
+  document.getElementById('ch-av-big').textContent = ch.avatar;
+  document.getElementById('ch-av-big').style.background = ch.color;
+  document.getElementById('ch-name').textContent = ch.name;
+  document.getElementById('ch-stats').textContent = ch.subs + ' subscribers';
+  document.getElementById('ch-about-desc').textContent = ch.desc;
+  document.getElementById('ch-about-stats').innerHTML =
+    ch.subs + ' subscribers<br>' + videosByChannel(ch.id).length + ' videos';
+
+  const vids = videosByChannel(ch.id);
+  document.getElementById('ch-video-grid').innerHTML = vids.length ? vids.map(v => {
+    const bg = thumbColor(v.id);
+    return `<div class="vg-card" onclick="window.location.href='watch.html?v=${v.id}'">
+      <div class="vg-thumb" style="background:${bg}">
+        <div class="vg-overlay"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7L8 5z" fill="#fff"/></svg></div>
+        <div class="vg-duration">${v.duration}</div>
+      </div>
+      <div class="vg-title">${sanitize(v.title)}</div>
+      <div class="vg-meta">${formatNumber(v.views)} views &middot; ${v.time}</div>
+    </div>`;
+  }).join('') : '<p class="text-muted">Este canal no tiene videos públicos todavía.</p>';
+}
+
+function toggleChannelSub() {
+  if (!requireAuth(null, 'Inicia sesión para suscribirte')) return;
+  chSubbed = !chSubbed;
+  const btn = document.getElementById('ch-sub-btn');
+  btn.classList.toggle('subbed', chSubbed);
+  btn.textContent = chSubbed ? 'Subscribed ✓' : 'Subscribe';
+}
+
+function switchChTab(el, tab) {
+  document.querySelectorAll('.ch-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('ch-tab-videos').classList.toggle('hidden', tab !== 'videos');
+  document.getElementById('ch-tab-about').classList.toggle('hidden', tab !== 'about');
+}
+
+loadChannelPage();
+</script>
+</body>
+</html>

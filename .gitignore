@@ -1,0 +1,23 @@
+# Vercel
+.vercel
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# Env / secrets — nunca subir claves de Supabase aquí
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# Dependencias (si en el futuro se añade tooling con npm)
+node_modules/

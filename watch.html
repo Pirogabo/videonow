@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title id="page-title">VideoNow - Watch</title>
+<meta name="description" content="Watch videos on VideoNow">
+<link rel="icon" href="assets/logo.png">
+<link rel="stylesheet" href="css/main.css">
+</head>
+<body data-page="watch">
+
+<header id="header">
+  <a href="index.html" id="logo"><img src="assets/logo.png" alt="VideoNow"></a>
+  <form id="search-form" action="search.html" role="search">
+    <div id="search-wrap">
+      <input type="text" id="search-input" name="q" placeholder="Search" autocomplete="off" maxlength="200" aria-label="Search VideoNow">
+      <button type="submit" id="search-btn" aria-label="Search">
+        <svg viewBox="0 0 24 24"><path d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" stroke="#555" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+  </form>
+  <div id="header-right">
+    <a href="browse.html">Browse</a>
+    <span class="hdr-sep">|</span>
+    <a href="movies.html">Movies</a>
+    <span class="hdr-sep">|</span>
+    <a href="#" class="btn-upload-hdr" onclick="openUploadModal(event)">
+      <svg viewBox="0 0 24 24"><path d="M12 16V4m0 0l-4 4m4-4l4 4M4 20h16" stroke="#666" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+      Upload
+    </a>
+    <span id="header-auth-slot" style="display:flex;align-items:center;gap:14px;"></span>
+  </div>
+</header>
+
+<nav id="navbar">
+  <a href="index.html" class="nav-item" data-nav="home">Videos</a>
+  <a href="music.html" class="nav-item" data-nav="music">Music</a>
+  <a href="movies.html" class="nav-item" data-nav="movies">Movies</a>
+  <a href="shows.html" class="nav-item" data-nav="shows">Shows</a>
+  <a href="live.html" class="nav-item" data-nav="live">Live</a>
+  <a href="education.html" class="nav-item" data-nav="education">Education</a>
+  <a href="news.html" class="nav-item" data-nav="news">News</a>
+</nav>
+
+<div id="page-shell" class="content-offset">
+  <main id="main" style="width:100%;">
+    <div id="watch-layout">
+      <div id="watch-main">
+
+        <div id="player-wrap">
+          <div id="player-placeholder" onclick="playVideo()">
+            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7L8 5z"/></svg>
+            <span id="player-placeholder-text">Click to play</span>
+          </div>
+        </div>
+
+        <h1 class="watch-title" id="watch-title">Loading…</h1>
+
+        <div class="watch-meta">
+          <span class="watch-views" id="watch-views"></span>
+          <div class="watch-actions">
+            <button class="watch-btn" id="like-btn" onclick="toggleLike()">
+              <svg viewBox="0 0 24 24"><path d="M7 22V11M2 13v7a2 2 0 0 0 2 2h12.5a2 2 0 0 0 2-1.6l1.3-6.5A2 2 0 0 0 18 11.6V11a2 2 0 0 0-2-2h-4l.6-3.3A2 2 0 0 0 10.6 3a2 2 0 0 0-1.8 1.1L7 8" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+              Like
+            </button>
+            <button class="watch-btn" id="dislike-btn" onclick="toggleDislike()">
+              <svg viewBox="0 0 24 24"><path d="M17 2v11M22 11V4a2 2 0 0 0-2-2H7.5a2 2 0 0 0-2 1.6l-1.3 6.5A2 2 0 0 0 6 12.4v.1a2 2 0 0 0 2 2h4l-.6 3.3a2 2 0 0 0 1.9 2.6 2 2 0 0 0 1.8-1.1L17 16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+              Dislike
+            </button>
+            <button class="watch-btn" onclick="requireAuth(event,'Inicia sesión para guardar')">
+              <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              Add to
+            </button>
+            <button class="watch-btn" onclick="shareVideo()">
+              <svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3" stroke="currentColor" stroke-width="2" fill="none"/><circle cx="6" cy="12" r="3" stroke="currentColor" stroke-width="2" fill="none"/><circle cx="18" cy="19" r="3" stroke="currentColor" stroke-width="2" fill="none"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4" stroke="currentColor" stroke-width="2"/></svg>
+              Share
+            </button>
+          </div>
+        </div>
+
+        <div class="like-bar"><div class="like-bar-fill" id="like-bar-fill" style="width:92%"></div></div>
+
+        <div class="watch-channel-row">
+          <div class="ch-av-sm" id="watch-ch-avatar">?</div>
+          <div class="ch-info-sm">
+            <a href="#" class="ch-name-lnk" id="watch-ch-name">Channel</a>
+            <div class="ch-sub-ct" id="watch-ch-subs"></div>
+          </div>
+          <button class="btn-sub" id="watch-sub-btn" onclick="toggleWatchSub()">Subscribe</button>
+        </div>
+
+        <div class="watch-desc" id="watch-desc"></div>
+        <div class="show-more-btn" id="show-more-btn" onclick="toggleDesc()">Show more</div>
+
+        <div class="comments-section">
+          <h3 id="comment-count">Comments</h3>
+          <div class="comment-form">
+            <textarea id="comment-input" placeholder="Add a public comment…" maxlength="2000"></textarea>
+            <button class="btn-cmt" onclick="postComment()">Comment</button>
+          </div>
+          <div id="comments-list"></div>
+        </div>
+
+      </div>
+
+      <aside id="watch-sidebar">
+        <div class="related-title">Up next</div>
+        <div id="related-list"></div>
+      </aside>
+    </div>
+  </main>
+</div>
+
+<footer id="footer">
+  <div class="footer-logo"><img src="assets/logo.png" alt="VideoNow"></div>
+  <nav class="footer-links">
+    <a href="about.html">About</a>
+    <a href="terms.html">Terms</a>
+    <a href="privacy.html">Privacy</a>
+    <a href="safety.html">Safety</a>
+  </nav>
+  <span class="footer-right">&copy; 2026 VideoNow</span>
+</footer>
+
+<div class="modal-overlay" id="modal-upload">
+  <div class="modal">
+    <button class="modal-close" onclick="closeUploadModal()">&times;</button>
+    <h2>Upload a video</h2>
+    <div class="upload-drop" onclick="simulateUpload(event)">
+      <svg viewBox="0 0 24 24"><path d="M12 16V4m0 0l-4 4m4-4l4 4M4 20h16" stroke="#bbb" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+      <p><strong>Click to select a file</strong> or drag and drop</p>
+      <p class="text-muted">MP4, WebM, MOV — max 2GB</p>
+    </div>
+    <div class="progress-bar hidden" id="upload-progress-bar"><div class="progress-fill" id="upload-progress-fill"></div></div>
+    <p class="security-note">🔒 Subidas limitadas a 10/día por cuenta · contenido moderado antes de publicarse</p>
+  </div>
+</div>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script src="js/security.js"></script>
+<script src="js/data.js"></script>
+<script src="js/layout.js"></script>
+<script src="js/player.js"></script>
+<script>
+let currentVideo = null;
+let liked = false, disliked = false, subbed = false, descExpanded = false;
+
+function loadWatchPage() {
+  const id = getQueryParam('v') || 'v6';
+  const v = getVideo(id) || VIDEOS[0];
+  currentVideo = v;
+  const ch = getChannel(v.ch);
+
+  document.getElementById('page-title').textContent = v.title + ' - VideoNow';
+  document.getElementById('watch-title').textContent = v.title;
+  document.getElementById('watch-views').textContent = formatNumber(v.views) + ' views · ' + v.time;
+  document.getElementById('watch-ch-avatar').textContent = ch.avatar;
+  document.getElementById('watch-ch-avatar').style.background = ch.color;
+  document.getElementById('watch-ch-name').textContent = ch.name;
+  document.getElementById('watch-ch-name').href = 'channel.html?id=' + ch.id;
+  document.getElementById('watch-ch-subs').textContent = ch.subs + ' subscribers';
+  document.getElementById('watch-desc').textContent = ch.desc + '\\n\\n' + v.desc;
+
+  const placeholderText = document.getElementById('player-placeholder-text');
+  if (placeholderText) {
+    placeholderText.textContent = v.src
+      ? 'Click to play (Shaka Player · HLS)'
+      : 'Video de ejemplo sin fuente configurada — conecta tu storage real';
+  }
+
+  renderComments(id);
+  renderRelated(id);
+}
+
+function playVideo() {
+  if (!currentVideo) return;
+
+  if (!currentVideo.src) {
+    // Este video del catálogo de ejemplo no tiene una fuente real configurada.
+    // En producción, currentVideo.src vendría de tu tabla `videos` en Supabase (campo url).
+    showToast('Este video de ejemplo no tiene una fuente configurada todavía.');
+    return;
+  }
+
+  VideoNowPlayer.mount('#player-wrap', {
+    src: currentVideo.src,
+    subtitles: currentVideo.subtitles || []
+  });
+}
+
+function toggleLike() {
+  if (!requireAuth(null, 'Inicia sesión para dar like')) return;
+  liked = !liked;
+  if (liked) disliked = false;
+  document.getElementById('like-btn').classList.toggle('liked', liked);
+  document.getElementById('dislike-btn').classList.remove('liked');
+  document.getElementById('like-bar-fill').style.width = liked ? '95%' : '92%';
+  showToast(liked ? '¡Te gusta este video!' : 'Like removido');
+}
+function toggleDislike() {
+  if (!requireAuth(null, 'Inicia sesión para reaccionar')) return;
+  disliked = !disliked;
+  if (disliked) liked = false;
+  document.getElementById('dislike-btn').classList.toggle('liked', disliked);
+  document.getElementById('like-btn').classList.remove('liked');
+  showToast(disliked ? 'Gracias por tu feedback' : 'Dislike removido');
+}
+function toggleWatchSub() {
+  if (!requireAuth(null, 'Inicia sesión para suscribirte')) return;
+  subbed = !subbed;
+  const btn = document.getElementById('watch-sub-btn');
+  btn.classList.toggle('subbed', subbed);
+  btn.textContent = subbed ? 'Subscribed ✓' : 'Subscribe';
+}
+function toggleDesc() {
+  descExpanded = !descExpanded;
+  document.getElementById('watch-desc').classList.toggle('expanded', descExpanded);
+  document.getElementById('show-more-btn').textContent = descExpanded ? 'Show less' : 'Show more';
+}
+function shareVideo() {
+  if (!RateLimiter.check('share', 10, 30000)) { showToast('Espera un momento'); return; }
+  showToast('Enlace copiado al portapapeles (demo)');
+}
+
+function postComment() {
+  if (!requireAuth(null, 'Inicia sesión para comentar')) return;
+  if (!RateLimiter.check('comment', 8, 60000)) { showToast('Estás comentando muy rápido'); return; }
+  const input = document.getElementById('comment-input');
+  const text = input.value.trim();
+  if (!text) return;
+  if (text.length > 2000) { showToast('Comentario demasiado largo'); return; }
+
+  const list = document.getElementById('comments-list');
+  const div = document.createElement('div');
+  div.className = 'comment';
+  div.innerHTML = `<div class="cmt-av">${sanitize((Auth.user?.name||'U').charAt(0).toUpperCase())}</div>
+    <div class="cmt-body">
+      <span class="cmt-author">${sanitize(Auth.user?.name || 'Tú')}</span><span class="cmt-time">justo ahora</span>
+      <div class="cmt-text">${sanitize(text, 2000)}</div>
+      <div class="cmt-likes">👍 0</div>
+    </div>`;
+  list.insertBefore(div, list.firstChild);
+  input.value = '';
+  showToast('Comentario publicado');
+}
+
+function renderComments(videoId) {
+  const comments = getComments(videoId);
+  document.getElementById('comment-count').textContent = comments.length + ' Comments';
+  document.getElementById('comments-list').innerHTML = comments.map(c => `
+    <div class="comment">
+      <div class="cmt-av">${sanitize(c.author.charAt(0).toUpperCase())}</div>
+      <div class="cmt-body">
+        <span class="cmt-author">${sanitize(c.author)}</span><span class="cmt-time">${sanitize(c.time)}</span>
+        <div class="cmt-text">${sanitize(c.text, 2000)}</div>
+        <div class="cmt-likes">👍 ${c.likes}</div>
+      </div>
+    </div>`).join('');
+}
+
+function renderRelated(excludeId) {
+  const related = relatedVideos(excludeId, 10);
+  document.getElementById('related-list').innerHTML = related.map(v => {
+    const ch = getChannel(v.ch);
+    const bg = thumbColor(v.id);
+    return `<div class="related-item" onclick="window.location.href='watch.html?v=${v.id}'">
+      <div class="ri-thumb" style="background:${bg}"><div class="ri-dur">${v.duration}</div></div>
+      <div class="ri-info">
+        <div class="ri-title">${sanitize(v.title)}</div>
+        <div class="ri-channel">${sanitize(ch.name)}</div>
+        <div class="ri-meta">${formatNumber(v.views)} views</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+loadWatchPage();
+</script>
+</body>
+</html>

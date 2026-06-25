@@ -1,0 +1,62 @@
+name: Validate site
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  html-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install html5validator
+        run: pip install html5validator
+
+      - name: Validate all HTML files
+        run: html5validator --root .
+
+  internal-links:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Check internal .html links resolve to real files
+        run: |
+          python3 - <<'PYEOF'
+          import re, glob, sys
+
+          errors = []
+          html_files = glob.glob('*.html')
+          existing = set(html_files)
+
+          for fname in html_files:
+              with open(fname, encoding='utf-8') as f:
+                  content = f.read()
+              hrefs = re.findall(r'href="([^"]+\.html)(?:\?[^"]*)?"', content)
+              for href in hrefs:
+                  if href.startswith('http'):
+                      continue
+                  if href not in existing:
+                      errors.append(f'{fname}: enlace roto a {href}')
+
+          if errors:
+              print('\n'.join(errors))
+              sys.exit(1)
+          print(f'OK — {len(html_files)} páginas, todos los enlaces internos válidos.')
+          PYEOF
+
