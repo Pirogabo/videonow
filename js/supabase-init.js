@@ -6,21 +6,23 @@
 
 // Las credenciales se inyectan desde Vercel en tiempo de build/runtime
 // En desarrollo local, lee de window.__ENV__ (inyectado por un script)
-const SUPABASE_URL = window.__ENV__?.SUPABASE_URL || 'https://gutvzkryggxiipjzluev.supabase.co';
-const SUPABASE_ANON_KEY = window.__ENV__?.SUPABASE_ANON_KEY || 'sb_publishable_s0HspuTmlJ5W5X4nr9AknQ_KZlh6zhN';
+window.SUPABASE_URL = window.__ENV__?.SUPABASE_URL || 'https://gutvzkryggxiipjzluev.supabase.co';
+window.SUPABASE_ANON_KEY = window.__ENV__?.SUPABASE_ANON_KEY || 'sb_publishable_s0HspuTmlJ5W5X4nr9AknQ_KZlh6zhN';
 
-// Crear cliente de Supabase
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-// Verificar conexión
-console.log('✅ Supabase inicializado:', { url: SUPABASE_URL });
+// Crear cliente de Supabase globalmente para evitar conflictos de scope
+if (!window.supabase) {
+  window.supabase = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+  console.log('✅ Supabase inicializado:', { url: window.SUPABASE_URL });
+}
 
 // Escuchar cambios de autenticación
-supabase.auth.onAuthStateChange((event, session) => {
-  console.log('🔐 Auth event:', event, session?.user?.email);
-  if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-    Auth.login({ email: session.user.email, name: session.user.user_metadata?.name || session.user.email.split('@')[0] });
-  } else if (event === 'SIGNED_OUT') {
-    Auth.logout();
-  }
-});
+if (window.supabase) {
+  window.supabase.auth.onAuthStateChange((event, session) => {
+    console.log('🔐 Auth event:', event, session?.user?.email);
+    if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+      Auth.login({ email: session.user.email, name: session.user.user_metadata?.name || session.user.email.split('@')[0] });
+    } else if (event === 'SIGNED_OUT') {
+      Auth.logout();
+    }
+  });
+}
