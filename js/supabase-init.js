@@ -22,7 +22,7 @@ if (!window.__supabaseClient) {
 }
 
 // Escuchar cambios de autenticación
-if (window.__supabaseClient) {
+if (window.__supabaseClient?.auth) {
   window.__supabaseClient.auth.onAuthStateChange((event, session) => {
     console.log('🔐 Auth event:', event, session?.user?.email);
     if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
@@ -31,4 +31,6 @@ if (window.__supabaseClient) {
       Auth.logout();
     }
   });
+} else {
+  console.warn('⚠️ Supabase auth module not available yet');
 }
