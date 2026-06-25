@@ -1,6 +1,6 @@
 # VideoNow 🎬
 
-![Validate site](https://github.com/TU_USUARIO/TU_REPO/actions/workflows/validate.yml/badge.svg)
+![Validate site](https://github.com/PIrogabo/videonow/actions/workflows/validate.yml/badge.svg)
 ![Version](https://img.shields.io/badge/version-1.0.0-00ae72)
 
 Port web de **VideoNow** — plataforma social de video/chat, con una interfaz inspirada en el clásico diseño "Cosmic Panda" de YouTube (2012), en la paleta de marca de VideoNow (degradado verde `#00f39f → #00ae72`).
