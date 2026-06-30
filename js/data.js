@@ -98,3 +98,67 @@ const CHAT_MESSAGES = {
   ],
 };
 function getChatMessages(roomId) { return CHAT_MESSAGES[roomId] || []; }
+
+/* ================================================================
+   VIDEOS SUBIDOS POR USUARIOS (localStorage)
+   Extiende el catálogo mock — no lo reemplaza. Estas funciones son
+   las que deben usar las páginas en vez de leer VIDEOS directamente
+   cuando quieran ver también lo que han subido los usuarios.
+   ================================================================ */
+
+function getUserVideos() {
+  try { return JSON.parse(localStorage.getItem('vn_videos') || '[]'); }
+  catch { return []; }
+}
+
+function saveUserVideos(videos) {
+  localStorage.setItem('vn_videos', JSON.stringify(videos));
+}
+
+function getAllVideos() {
+  return [...VIDEOS, ...getUserVideos()];
+}
+
+function getVideoById(id) {
+  return getAllVideos().find(v => v.id === id) || null;
+}
+
+/** Normaliza un video (mock o subido por usuario) a un shape común para las plantillas. */
+function normalizeVideo(v) {
+  if (!v) return null;
+  const isUserUpload = String(v.id).startsWith('uv_');
+  return {
+    id: v.id,
+    title: v.title,
+    desc: v.desc || '',
+    duration: v.duration || '0:00',
+    cat: v.cat || 'all',
+    views: v.views || 0,
+    time: v.time || formatRelativeTime(v.createdAt),
+    channelName: isUserUpload ? (v.channelName || 'Usuario') : getChannel(v.ch).name,
+    channelId: isUserUpload ? (v.uploadedBy || '') : v.ch,
+    thumb: v.thumb || null,
+    src: v.src || null,
+    subtitles: v.subtitles || [],
+    isUserUpload,
+    likes: v.likes || 0,
+    dislikes: v.dislikes || 0,
+    tags: v.tags || [],
+    visibility: v.visibility || 'public',
+  };
+}
+
+function formatRelativeTime(isoString) {
+  if (!isoString) return '';
+  const diffMs = Date.now() - new Date(isoString).getTime();
+  const mins = Math.floor(diffMs / 60000);
+  if (mins < 1) return 'justo ahora';
+  if (mins < 60) return `hace ${mins} min`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `hace ${hours} h`;
+  const days = Math.floor(hours / 24);
+  if (days < 30) return `hace ${days} día${days === 1 ? '' : 's'}`;
+  const months = Math.floor(days / 30);
+  if (months < 12) return `hace ${months} mes${months === 1 ? '' : 'es'}`;
+  return `hace ${Math.floor(months / 12)} año(s)`;
+}

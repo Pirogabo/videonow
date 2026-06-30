@@ -67,18 +67,10 @@ function showToast(msg, duration) {
   t._timer = setTimeout(() => t.classList.remove('show'), duration);
 }
 
-// ---- FAKE AUTH STATE (persisted in-memory only — wire to Supabase Auth) ----
-const Auth = (() => {
-  let user = null;
-  const listeners = [];
-  return {
-    get user() { return user; },
-    isLoggedIn() { return !!user; },
-    login(u) { user = u; listeners.forEach(fn => fn(user)); },
-    logout() { user = null; listeners.forEach(fn => fn(user)); },
-    onChange(fn) { listeners.push(fn); }
-  };
-})();
+// El objeto Auth real (persistente en localStorage) vive en js/auth.js.
+// Debe cargarse ANTES que este archivo... en realidad layout.js y el resto
+// solo necesitan que exista la variable global `Auth`, así que basta con
+// incluir <script src="js/auth.js"> antes de <script src="js/layout.js">.
 
 function requireAuth(e, msg) {
   if (e && e.preventDefault) e.preventDefault();

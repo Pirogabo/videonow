@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title id="page-title">Lista de reproducción - VideoNow</title>
+<link rel="icon" href="assets/logo.png">
+<link rel="stylesheet" href="css/main.css">
+<style>
+.pl-item {
+  display:flex; align-items:center; gap:12px; padding:10px;
+  background:#fff; border:1px solid var(--border); border-radius:3px;
+  margin-bottom:8px; cursor:grab;
+}
+.pl-item.dragging { opacity:0.4; }
+.pl-item .drag-handle { color:#bbb; font-size:16px; flex-shrink:0; }
+.pl-item .pl-thumb { width:120px; height:68px; flex-shrink:0; border-radius:2px; background-size:cover; background-position:center; }
+.pl-item .pl-info { flex:1; min-width:0; }
+.pl-item .pl-title { font-size:13px; font-weight:bold; color:var(--text); }
+.pl-item .pl-meta { font-size:11px; color:var(--text-muted); margin-top:2px; }
+.pl-remove-btn { font-size:11px; padding:3px 9px; background:#fee; border:1px solid #fcc; border-radius:2px; cursor:pointer; flex-shrink:0; }
+</style>
+</head>
+<body data-page="playlist">
+
+<header id="header">
+  <a href="index.html" id="logo"><img src="assets/logo.png" alt="VideoNow"></a>
+  <form id="search-form" action="search.html" role="search">
+    <div id="search-wrap">
+      <input type="text" id="search-input" name="q" placeholder="Buscar" autocomplete="off" maxlength="200">
+      <button type="submit" id="search-btn" aria-label="Buscar"><svg viewBox="0 0 24 24"><path d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" stroke="#555" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg></button>
+    </div>
+  </form>
+  <div id="header-right">
+    <a href="browse.html">Explorar</a>
+    <span id="header-auth-slot" style="display:flex;align-items:center;gap:14px;margin-left:14px;"></span>
+  </div>
+</header>
+<nav id="navbar"></nav>
+
+<div class="content-offset">
+  <main id="main" style="max-width:760px;margin:0 auto;">
+    <div style="background:#fff;border:1px solid var(--border);border-radius:3px;padding:18px 22px;margin-bottom:16px;">
+      <h1 id="pl-name" style="font-size:20px;margin-bottom:4px;"></h1>
+      <p id="pl-desc" class="text-muted" style="font-size:13px;margin-bottom:8px;"></p>
+      <p id="pl-meta" style="font-size:12px;color:var(--text-muted);"></p>
+      <div id="pl-actions" style="margin-top:10px;display:flex;gap:8px;"></div>
+    </div>
+
+    <div id="pl-items"></div>
+    <p id="pl-empty" class="text-muted hidden" style="padding:24px;text-align:center;">Esta lista no tiene videos todavía.</p>
+  </main>
+</div>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script src="js/env.js" onerror="void 0"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-init.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/data.js"></script>
+<script src="js/notifications.js"></script>
+<script src="js/comments.js"></script>
+<script src="js/playlists.js"></script>
+<script src="js/interactions.js"></script>
+<script src="js/upload.js"></script>
+<script src="js/security.js"></script>
+<script src="js/layout.js"></script>
+<script>
+'use strict';
+let _plOwnerId = null;
+let _plId = null;
+let _isOwnPlaylist = false;
+
+function loadPlaylistPage() {
+  _plId = getQueryParam('id');
+  _plOwnerId = getQueryParam('user') || Auth.user?.id;
+  if (!_plId || !_plOwnerId) {
+    document.getElementById('pl-name').textContent = 'Lista no encontrada';
+    return;
+  }
+
+  const pl = getPlaylistById(_plOwnerId, _plId);
+  if (!pl) {
+    document.getElementById('pl-name').textContent = 'Lista no encontrada';
+    return;
+  }
+
+  _isOwnPlaylist = Auth.isLoggedIn() && _plOwnerId === Auth.user.id;
+  if (pl.visibility === 'private' && !_isOwnPlaylist) {
+    document.getElementById('pl-name').textContent = 'Esta lista es privada';
+    document.getElementById('pl-items').innerHTML = '';
+    return;
+  }
+
+  document.getElementById('page-title').textContent = pl.name + ' - VideoNow';
+  document.getElementById('pl-name').textContent = pl.name;
+  document.getElementById('pl-desc').textContent = pl.description || '';
+  document.getElementById('pl-meta').textContent =
+    `${pl.videoIds.length} videos${pl.visibility === 'private' ? ' · Privada' : ' · Pública'}`;
+
+  const actions = document.getElementById('pl-actions');
+  let html = `<button onclick="sharePlaylist()" class="btn-oauth" style="width:auto;padding:0 16px;">Compartir</button>`;
+  if (!_isOwnPlaylist && pl.visibility === 'public') {
+    html += `<button onclick="saveToMine()" class="btn-sub">Guardar en mis listas</button>`;
+  }
+  if (_isOwnPlaylist) {
+    html += `<button onclick="renamePl()" class="btn-oauth" style="width:auto;padding:0 16px;">Renombrar</button>
+             <button onclick="deletePl()" class="btn-oauth" style="width:auto;padding:0 16px;color:#c0392b;">Eliminar lista</button>`;
+  }
+  actions.innerHTML = html;
+
+  renderPlaylistItems(pl);
+}
+
+function renderPlaylistItems(pl) {
+  const container = document.getElementById('pl-items');
+  const empty = document.getElementById('pl-empty');
+  if (!pl.videoIds.length) { empty.classList.remove('hidden'); container.innerHTML = ''; return; }
+  empty.classList.add('hidden');
+
+  container.innerHTML = pl.videoIds.map((vid, idx) => {
+    const v = getVideoById(vid);
+    if (!v) return '';
+    const n = normalizeVideo(v);
+    return `<div class="pl-item" draggable="${_isOwnPlaylist}" data-vid="${vid}" data-idx="${idx}"
+                 ondragstart="onDragStart(event)" ondragover="onDragOver(event)" ondrop="onDrop(event)" ondragend="onDragEnd(event)">
+      ${_isOwnPlaylist ? '<span class="drag-handle">⠿</span>' : ''}
+      <a href="watch.html?v=${vid}" class="pl-thumb" style="background:${n.thumb ? `url(${sanitize(n.thumb)})` : thumbColor(vid)};display:block;"></a>
+      <a href="watch.html?v=${vid}" class="pl-info" style="text-decoration:none;">
+        <div class="pl-title">${sanitize(n.title)}</div>
+        <div class="pl-meta">${sanitize(n.channelName)} · ${formatNumber(n.views)} visualizaciones</div>
+      </a>
+      ${_isOwnPlaylist ? `<button class="pl-remove-btn" onclick="removeItem('${vid}')">Eliminar</button>` : ''}
+    </div>`;
+  }).join('');
+}
+
+/* ---- Drag & drop reordering ---- */
+let _dragSrcIdx = null;
+
+function onDragStart(e) {
+  _dragSrcIdx = parseInt(e.currentTarget.dataset.idx, 10);
+  e.currentTarget.classList.add('dragging');
+}
+function onDragOver(e) { e.preventDefault(); }
+function onDrop(e) {
+  e.preventDefault();
+  const targetIdx = parseInt(e.currentTarget.dataset.idx, 10);
+  if (_dragSrcIdx === null || _dragSrcIdx === targetIdx) return;
+
+  const pl = getPlaylistById(_plOwnerId, _plId);
+  const ids = [...pl.videoIds];
+  const [moved] = ids.splice(_dragSrcIdx, 1);
+  ids.splice(targetIdx, 0, moved);
+
+  reorderPlaylist(_plId, ids);
+  loadPlaylistPage();
+}
+function onDragEnd(e) { e.currentTarget.classList.remove('dragging'); }
+
+function removeItem(videoId) {
+  const result = removeVideoFromPlaylist(_plId, videoId);
+  if (!result.ok) { showToast(result.error); return; }
+  showToast('Eliminado de la lista');
+  loadPlaylistPage();
+}
+
+function sharePlaylist() {
+  const url = window.location.href;
+  if (navigator.clipboard) navigator.clipboard.writeText(url).then(() => showToast('¡Enlace copiado!'));
+  else showToast('¡Enlace copiado!');
+}
+
+function saveToMine() {
+  if (!requireAuth(null, 'Inicia sesión para guardar listas')) return;
+  const pl = getPlaylistById(_plOwnerId, _plId);
+  const result = createPlaylist(pl.name + ' (copia)', 'private');
+  if (!result.ok) { showToast(result.error); return; }
+  pl.videoIds.forEach(vid => addVideoToPlaylist(result.playlist.id, vid));
+  showToast('Lista guardada en tu perfil');
+}
+
+function renamePl() {
+  const pl = getPlaylistById(_plOwnerId, _plId);
+  const newName = prompt('Nuevo nombre:', pl.name);
+  if (!newName) return;
+  renamePlaylist(_plId, newName.trim(), pl.description);
+  loadPlaylistPage();
+}
+
+function deletePl() {
+  if (!confirm('¿Eliminar esta lista de reproducción?')) return;
+  deletePlaylist(_plId);
+  showToast('Lista eliminada');
+  setTimeout(() => window.location.href = 'profile.html', 600);
+}
+
+loadPlaylistPage();
+</script>
+</body>
+</html>

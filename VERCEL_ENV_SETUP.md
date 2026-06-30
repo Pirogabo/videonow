@@ -1,68 +1,55 @@
-# Seguridad en VideoNow
+# Configurar variables de entorno en Vercel
 
-## Variables de Entorno
+Este sitio es **estático puro** (sin Next.js, sin Vite, sin build de un framework). Por eso configurar las "Environment Variables" en el dashboard de Vercel **no basta por sí solo** — necesitas el paso extra que ya está preparado en este repo.
 
-Los secretos (API keys) deben estar en **Vercel**, NO en el código.
+## Cómo funciona aquí
 
-### Cómo funciona:
+1. `vercel.json` define:
+   ```json
+   "buildCommand": "node scripts/generate-env.js"
+   ```
+2. Ese script lee `process.env.SUPABASE_URL` y `process.env.SUPABASE_ANON_KEY` (las que pongas en el dashboard de Vercel) y genera `js/env.js` con ese contenido, **en cada deploy**.
+3. `js/env.js` define `window.VIDEONOW_ENV`, que `js/supabase-init.js` lee para crear el cliente de Supabase (guardado como `VN_SUPABASE`, nunca como `supabase` — ver el comentario al principio de ese archivo para el porqué).
 
-1. **En Vercel:** Defines variables de entorno (SUPABASE_URL, SUPABASE_ANON_KEY).
-2. **En el build:** Vercel inyecta esas variables en tu HTML como `window.__ENV__`.
-3. **En el navegador:** `js/supabase-init.js` las lee desde `window.__ENV__`.
-4. **En GitHub:** El código es público pero los secretos NO aparecen.
+## Pasos en el dashboard de Vercel
 
-### Paso a paso en Vercel (abajo)
+1. Ve a tu proyecto en [vercel.com](https://vercel.com) → **Settings** → **Environment Variables**.
+2. Añade:
+   | Key | Value | Environments |
+   |---|---|---|
+   | `SUPABASE_URL` | `https://tu-proyecto.supabase.co` | Production, Preview, Development |
+   | `SUPABASE_ANON_KEY` | tu anon/public key de Supabase | Production, Preview, Development |
+3. **No añadas `SUPABASE_SERVICE_ROLE_KEY` aquí** — esa clave nunca debe llegar al navegador. Si en el futuro necesitas lógica de servidor (Edge Functions de Vercel), va en variables separadas que esas funciones leen server-side, no en este flujo de build estático.
+4. Redeploy (Vercel → Deployments → "..." → Redeploy) para que el build vuelva a correr `generate-env.js` con las variables nuevas.
 
----
+## Cómo verificar que funcionó
 
-## 🔐 Paso a paso: Configurar variables en Vercel
+Abre la consola del navegador en tu sitio desplegado y ejecuta:
+```js
+console.log(window.VIDEONOW_ENV);
+```
+Deberías ver tu URL y anon key (no vacías). Si `isSupabaseReady()` devuelve `false`, revisa:
+- Que las variables estén bien escritas (sin espacios, sin comillas extra).
+- Que hayas hecho un redeploy *después* de guardarlas (los deploys viejos no las tienen).
+- Los logs de build en Vercel — busca la línea `[generate-env] ...`.
 
-### 1. Ve a tu proyecto en Vercel
+## Desarrollo local
 
-- https://vercel.com/dashboard
-- Selecciona **videonow**
+No necesitas Vercel para desarrollar localmente:
 
-### 2. Settings → Environment Variables
+```bash
+cp js/env.example.js js/env.js
+# Edita js/env.js con tus valores reales
+```
 
-- Clic en **Settings** (arriba de la página).
-- En el menú izquierdo: **Environment Variables**.
+`js/env.js` ya está en `.gitignore`, así que nunca se commitea por accidente.
 
-### 3. Añade las variables
+## Sobre el bug `Identifier 'supabase' has already been declared`
 
-Clic en **Add New** y crea estas dos:
+Si ves este error, significa que en algún sitio del código se está haciendo:
+```js
+const supabase = createClient(...);
+```
+La librería `@supabase/supabase-js` cargada por `<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">` ya ocupa el nombre global `supabase` (es `window.supabase.createClient`). Declarar `const supabase = ...` por encima choca con eso.
 
-| Name | Value | Environments |
-|------|-------|--------------|
-| `SUPABASE_URL` | `https://gutvzkryggxiipjzluev.supabase.co` | Production, Preview, Development |
-| `SUPABASE_ANON_KEY` | `sb_publishable_s0HspuTmlJ5W5X4nr9AknQ_KZlh6zhN` | Production, Preview, Development |
-
-Para cada una:
-- Clic en **Add New**.
-- Escribe el nombre (ej: `SUPABASE_URL`).
-- Escribe el valor (ej: `https://gutvzkryggxiipjzluev.supabase.co`).
-- Selecciona **todas** las opciones en "Environments" (Production, Preview, Development).
-- Clic en **Save**.
-
-### 4. Redeploy
-
-- Vercel te dice: "Changes saved. Redeploy to apply environment variables?"
-- Clic en **Redeploy**.
-- Espera 2-3 minutos.
-
-### 5. Prueba
-
-- Ve a tu sitio: `https://videonow-xyz.vercel.app/register.html`
-- Abre la consola (F12).
-- Deberías ver: `✅ Supabase inicializado: { url: 'https://...' }`
-
----
-
-## ✅ Checklist
-
-- [ ] Añadiste `SUPABASE_URL` en Vercel
-- [ ] Añadiste `SUPABASE_ANON_KEY` en Vercel
-- [ ] Hiciste redeploy
-- [ ] El login funciona en Vercel
-- [ ] GitHub NO muestra tus secretos en el código
-
-¡Listo!
+**Solución ya aplicada en este repo:** el cliente se guarda como `VN_SUPABASE` (ver `js/supabase-init.js`). Si añades código nuevo que necesite Supabase, usa siempre `VN_SUPABASE`, nunca declares tu propia variable `supabase`.

@@ -13,16 +13,16 @@
   <a href="index.html" id="logo"><img src="assets/logo.png" alt="VideoNow"></a>
   <form id="search-form" action="search.html" role="search">
     <div id="search-wrap">
-      <input type="text" id="search-input" name="q" placeholder="Search" autocomplete="off" maxlength="200" aria-label="Search VideoNow">
-      <button type="submit" id="search-btn" aria-label="Search">
+      <input type="text" id="search-input" name="q" placeholder="Buscar" autocomplete="off" maxlength="200" aria-label="Buscar en VideoNow">
+      <button type="submit" id="search-btn" aria-label="Buscar">
         <svg viewBox="0 0 24 24"><path d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" stroke="#555" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>
       </button>
     </div>
   </form>
   <div id="header-right">
-    <a href="browse.html">Browse</a>
+    <a href="browse.html">Explorar</a>
     <span class="hdr-sep">|</span>
-    <a href="movies.html">Movies</a>
+    <a href="movies.html">Películas</a>
     <span class="hdr-sep">|</span>
     <span id="header-auth-slot" style="display:flex;align-items:center;gap:14px;"></span>
   </div>
@@ -30,10 +30,10 @@
 
 <nav id="navbar">
   <a href="index.html" class="nav-item" data-nav="home">Videos</a>
-  <a href="music.html" class="nav-item" data-nav="music">Music</a>
-  <a href="movies.html" class="nav-item" data-nav="movies">Movies</a>
-  <a href="shows.html" class="nav-item" data-nav="shows">Shows</a>
-  <a href="live.html" class="nav-item" data-nav="live">Live</a>
+  <a href="music.html" class="nav-item" data-nav="music">Música</a>
+  <a href="movies.html" class="nav-item" data-nav="movies">Películas</a>
+  <a href="shows.html" class="nav-item" data-nav="shows">Series</a>
+  <a href="live.html" class="nav-item" data-nav="live">En directo</a>
   <a href="chat.html" class="nav-item" data-nav="chat">Chats</a>
 </nav>
 
@@ -61,8 +61,14 @@
 
 <div id="toast" role="status" aria-live="polite"></div>
 
-<script src="js/security.js"></script>
+<script src="js/auth.js"></script>
 <script src="js/data.js"></script>
+<script src="js/notifications.js"></script>
+<script src="js/comments.js"></script>
+<script src="js/playlists.js"></script>
+<script src="js/interactions.js"></script>
+<script src="js/upload.js"></script>
+<script src="js/security.js"></script>
 <script src="js/layout.js"></script>
 <script>
 let activeRoom = 'general';
@@ -74,7 +80,7 @@ function renderRoomList() {
       <span class="chat-room-dot"></span>
       <div style="min-width:0;flex:1;">
         <div style="font-size:13px;${r.id===activeRoom?'font-weight:bold;':''}overflow:hidden;text-overflow:ellipsis;">${sanitize(r.name)}</div>
-        <div style="font-size:11px;color:#999;">${r.online} online</div>
+        <div style="font-size:11px;color:#999;">${r.online} en línea</div>
       </div>
     </div>`).join('');
 }

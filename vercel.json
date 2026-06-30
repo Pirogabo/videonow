@@ -1,6 +1,8 @@
 {
   "cleanUrls": true,
   "trailingSlash": false,
+  "buildCommand": "node scripts/generate-env.js",
+  "outputDirectory": ".",
   "headers": [
     {
       "source": "/(.*)",

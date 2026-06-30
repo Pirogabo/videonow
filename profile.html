@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title id="page-title">Perfil - VideoNow</title>
+<link rel="icon" href="assets/logo.png">
+<link rel="stylesheet" href="css/main.css">
+<style>
+.avatar-big {
+  width:80px;height:80px;border-radius:50%;background:var(--accent-grad);
+  display:flex;align-items:center;justify-content:center;font-size:32px;
+  font-weight:bold;color:#fff;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.15);
+  overflow:hidden;flex-shrink:0;
+}
+.stat-badge { text-align:center; }
+.stat-badge .num { font-size:20px;font-weight:bold;color:var(--text); }
+.stat-badge .lbl { font-size:11px;color:var(--text-muted); }
+.visbadge {
+  font-size:10px;padding:1px 6px;border-radius:10px;font-weight:bold;
+  background:#e8f5ef;color:var(--accent-dark);vertical-align:middle;margin-left:5px;
+}
+.visbadge.unlisted { background:#fffbeb;color:#7a5800; }
+.visbadge.private { background:#fff0f0;color:#c0392b; }
+.history-item {
+  display:flex;align-items:center;gap:10px;padding:7px 0;
+  border-bottom:1px solid #f0f0f0;font-size:13px;
+}
+</style>
+</head>
+<body data-page="profile">
+
+<header id="header">
+  <a href="index.html" id="logo"><img src="assets/logo.png" alt="VideoNow"></a>
+  <form id="search-form" action="search.html" role="search">
+    <div id="search-wrap">
+      <input type="text" id="search-input" name="q" placeholder="Buscar" autocomplete="off" maxlength="200">
+      <button type="submit" id="search-btn" aria-label="Buscar">
+        <svg viewBox="0 0 24 24"><path d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" stroke="#555" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+  </form>
+  <div id="header-right">
+    <a href="browse.html">Explorar</a>
+    <span class="hdr-sep">|</span>
+    <a href="#" class="btn-upload-hdr" onclick="openUploadModal(event)">
+      <svg viewBox="0 0 24 24"><path d="M12 16V4m0 0l-4 4m4-4l4 4M4 20h16" stroke="#666" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+      Subir
+    </a>
+    <span id="header-auth-slot" style="display:flex;align-items:center;gap:14px;"></span>
+  </div>
+</header>
+<nav id="navbar">
+  <a href="index.html" class="nav-item" data-nav="home">Videos</a>
+  <a href="music.html" class="nav-item" data-nav="music">Música</a>
+  <a href="movies.html" class="nav-item" data-nav="movies">Películas</a>
+  <a href="shows.html" class="nav-item" data-nav="shows">Series</a>
+  <a href="live.html" class="nav-item" data-nav="live">En directo</a>
+  <a href="education.html" class="nav-item" data-nav="education">Educación</a>
+  <a href="news.html" class="nav-item" data-nav="news">Noticias</a>
+</nav>
+
+<div class="content-offset">
+  <!-- Banner -->
+  <div id="profile-banner" style="width:100%;height:100px;background:linear-gradient(135deg,#0d1b2a,#163a2e);"></div>
+
+  <!-- Header de perfil -->
+  <div id="channel-header">
+    <div class="avatar-big" id="profile-avatar">?</div>
+    <div id="ch-meta" style="flex:1;">
+      <div id="profile-name" style="font-size:22px;font-weight:bold;color:var(--text);"></div>
+      <div id="profile-handle" style="font-size:13px;color:var(--text-muted);"></div>
+      <div id="profile-joined" style="font-size:11px;color:var(--text-muted);margin-top:2px;"></div>
+    </div>
+    <div style="display:flex;gap:20px;align-items:center;">
+      <div class="stat-badge"><div class="num" id="stat-subs">0</div><div class="lbl">suscriptores</div></div>
+      <div class="stat-badge"><div class="num" id="stat-videos">0</div><div class="lbl">videos</div></div>
+      <div class="stat-badge"><div class="num" id="stat-views">0</div><div class="lbl">visualizaciones</div></div>
+    </div>
+    <div id="profile-actions" style="margin-left:12px;display:flex;gap:8px;"></div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="ch-tabs">
+    <div class="ch-tab active" data-tab="videos" onclick="switchTab(this,'videos')">Videos</div>
+    <div class="ch-tab" data-tab="playlists" onclick="switchTab(this,'playlists')">Listas de reproducción</div>
+    <div class="ch-tab" id="tab-history-btn" data-tab="history" onclick="switchTab(this,'history')" style="display:none;">Historial</div>
+    <div class="ch-tab" data-tab="about" onclick="switchTab(this,'about')">Acerca de</div>
+  </div>
+
+  <main id="main">
+    <!-- Tab: Videos -->
+    <div id="tab-videos">
+      <div class="video-grid" id="profile-video-grid"></div>
+      <p id="no-videos-msg" class="text-muted" style="padding:20px 0;display:none;">Este usuario no tiene videos públicos todavía.</p>
+    </div>
+
+    <!-- Tab: Playlists -->
+    <div id="tab-playlists" class="hidden">
+      <div style="display:flex;justify-content:flex-end;margin-bottom:10px;" id="new-pl-btn-wrap"></div>
+      <div id="profile-playlists-grid" class="video-grid"></div>
+      <p id="no-pl-msg" class="text-muted" style="padding:20px 0;display:none;">Sin listas de reproducción públicas.</p>
+    </div>
+
+    <!-- Tab: Historial (solo propio) -->
+    <div id="tab-history" class="hidden">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <span style="font-size:14px;font-weight:bold;">Historial de visualización</span>
+        <button onclick="doClearHistory()" style="font-size:12px;padding:4px 10px;background:#eee;border:1px solid var(--border);border-radius:2px;cursor:pointer;">Borrar historial</button>
+      </div>
+      <div id="history-list"></div>
+    </div>
+
+    <!-- Tab: Acerca de -->
+    <div id="tab-about" class="hidden">
+      <div style="background:#fff;border:1px solid var(--border);border-radius:2px;padding:18px 22px;max-width:600px;">
+        <div id="about-bio" style="font-size:13px;color:var(--text-mid);line-height:1.6;margin-bottom:12px;white-space:pre-wrap;"></div>
+        <div id="about-country" style="font-size:13px;color:var(--text-muted);margin-bottom:6px;"></div>
+        <div id="about-link" style="font-size:13px;margin-bottom:12px;"></div>
+        <div style="font-size:12px;color:var(--text-muted);border-top:1px solid var(--border);padding-top:10px;" id="about-stats"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Modal: Editar perfil -->
+<div class="modal-overlay" id="modal-edit-profile">
+  <div class="modal">
+    <button class="modal-close" onclick="closeEditProfile()" aria-label="Cerrar">&times;</button>
+    <h2>Editar perfil</h2>
+    <form id="edit-profile-form" onsubmit="saveProfile(event)">
+      <div class="form-group">
+        <label>Foto de perfil</label>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px;">
+          <div id="edit-avatar-preview" class="avatar-big" style="width:50px;height:50px;font-size:20px;cursor:pointer;" onclick="document.getElementById('avatar-input').click()">?</div>
+          <span style="font-size:12px;color:var(--text-muted);">Haz clic para cambiar (máx. 200 KB)</span>
+        </div>
+        <input type="file" id="avatar-input" accept="image/*" class="hidden" onchange="previewAvatar(this)">
+      </div>
+      <div class="form-group">
+        <label for="edit-name">Nombre</label>
+        <input type="text" id="edit-name" maxlength="50" required>
+      </div>
+      <div class="form-group">
+        <label for="edit-handle">Usuario</label>
+        <input type="text" id="edit-handle" maxlength="30" placeholder="@usuario">
+        <small>Solo letras, números y guion bajo.</small>
+      </div>
+      <div class="form-group">
+        <label for="edit-bio">Bio</label>
+        <textarea id="edit-bio" maxlength="500" rows="3" style="width:100%;border:1px solid var(--border-dark);border-radius:2px;padding:6px 8px;font-size:13px;font-family:inherit;resize:vertical;"></textarea>
+      </div>
+      <div class="form-group">
+        <label for="edit-country">País</label>
+        <input type="text" id="edit-country" maxlength="60">
+      </div>
+      <div class="form-group">
+        <label for="edit-link">Enlace externo</label>
+        <input type="url" id="edit-link" maxlength="200" placeholder="https://...">
+      </div>
+      <button type="submit" class="btn-submit">Guardar cambios</button>
+    </form>
+  </div>
+</div>
+
+<!-- Upload modal (igual que el resto) -->
+<div class="modal-overlay" id="modal-upload">
+  <div class="modal">
+    <button class="modal-close" onclick="closeUploadModal()" aria-label="Cerrar">&times;</button>
+    <div id="upload-step-1"><h2>Subir un video</h2><div class="upload-drop" onclick="document.getElementById('upload-file-input').click()"><svg viewBox="0 0 24 24"><path d="M12 16V4m0 0l-4 4m4-4l4 4M4 20h16" stroke="#bbb" stroke-width="2" fill="none" stroke-linecap="round"/></svg><p><strong>Haz clic para elegir</strong> o arrastra aquí</p><p class="text-muted">MP4, WebM, MOV, MKV, AVI — máx. 100 GB</p></div><input type="file" id="upload-file-input" accept=".mp4,.webm,.mov,.mkv,.avi,video/*" class="hidden" onchange="onUploadFileSelected(this)"><p class="security-note">🔒 Límite 10 subidas/día</p></div>
+    <div id="upload-step-2" class="hidden"><h2>Detalles</h2><p class="text-muted" style="font-size:12px;margin-bottom:10px;">📁 <span id="upload-filename"></span> · <span id="upload-filesize"></span></p><form id="upload-metadata-form" onsubmit="submitUploadMetadata(event)"><div class="form-group"><label>Título</label><input type="text" id="upload-title" maxlength="100" required placeholder="Título"></div><div class="form-group"><label>Descripción</label><textarea id="upload-desc" maxlength="5000" rows="3" style="width:100%;border:1px solid var(--border-dark);border-radius:2px;padding:6px 8px;font-size:13px;font-family:inherit;resize:vertical;"></textarea></div><div class="form-group"><label>Categoría</label><select id="upload-cat"><option value="entertainment">Entretenimiento</option><option value="music">Música</option><option value="gaming">Videojuegos</option><option value="other">Otro</option></select></div><div class="form-group"><label>Tags</label><input type="text" id="upload-tags" placeholder="tag1, tag2" oninput="onUploadTagsInput(this)"></div><div class="form-group"><label>Visibilidad</label><div style="display:flex;gap:14px;font-size:13px;margin-top:4px;"><label style="display:flex;align-items:center;gap:5px;font-weight:normal;"><input type="radio" name="upload-visibility" value="public" checked style="width:auto;"> Público</label><label style="display:flex;align-items:center;gap:5px;font-weight:normal;"><input type="radio" name="upload-visibility" value="unlisted" style="width:auto;"> No listado</label><label style="display:flex;align-items:center;gap:5px;font-weight:normal;"><input type="radio" name="upload-visibility" value="private" style="width:auto;"> Privado</label></div></div><button type="submit" class="btn-submit">Subir →</button></form></div>
+    <div id="upload-step-3" class="hidden"><h2>Subiendo…</h2><div class="progress-bar"><div class="progress-fill" id="upload-progress-fill"></div></div><p id="upload-status-text" class="text-muted" style="text-align:center;font-size:13px;">0%</p></div>
+    <div id="upload-step-4" class="hidden" style="text-align:center;"><h2>¡Publicado! 🎉</h2><img id="upload-success-thumb" class="hidden" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBTAA7" style="width:100%;max-width:280px;border-radius:4px;margin:10px auto;display:block;" alt="Miniatura"><a id="upload-success-watch-btn" href="#" class="btn-submit" style="display:inline-block;text-decoration:none;margin-top:10px;">Ver video</a><button onclick="uploadAnother()" class="btn-oauth" style="margin-top:8px;">Subir otro</button></div>
+  </div>
+</div>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script src="js/env.js" onerror="void 0"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-init.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/data.js"></script>
+<script src="js/notifications.js"></script>
+<script src="js/comments.js"></script>
+<script src="js/playlists.js"></script>
+<script src="js/interactions.js"></script>
+<script src="js/upload.js"></script>
+<script src="js/security.js"></script>
+<script src="js/layout.js"></script>
+<script>
+'use strict';
+let _profileUser = null;
+let _isOwnProfile = false;
+let _newAvatarDataUrl = null;
+
+function loadProfile() {
+  const id = getQueryParam('id');
+  _isOwnProfile = !id || (Auth.isLoggedIn() && id === Auth.user.id);
+  _profileUser = _isOwnProfile ? Auth.user : (id ? Auth.getUser(id) : null);
+
+  if (!_profileUser) {
+    document.getElementById('profile-name').textContent = 'Usuario no encontrado';
+    return;
+  }
+
+  const u = _profileUser;
+  const vids = getUserVideos().filter(v => v.uploadedBy === u.id);
+  const totalViews = vids.reduce((s, v) => s + (v.views || 0), 0);
+
+  document.getElementById('page-title').textContent = u.name + ' - VideoNow';
+  document.getElementById('profile-name').textContent = u.name;
+  document.getElementById('profile-handle').textContent = '@' + u.handle;
+  document.getElementById('profile-joined').textContent = 'En VideoNow desde ' + new Date(u.createdAt).toLocaleDateString('es-ES', { year:'numeric', month:'long' });
+  document.getElementById('stat-subs').textContent = formatNumber(u.subscribers || 0);
+  document.getElementById('stat-videos').textContent = vids.length;
+  document.getElementById('stat-views').textContent = formatNumber(totalViews);
+
+  // Avatar
+  const av = document.getElementById('profile-avatar');
+  if (u.avatar) { av.innerHTML = `<img src="${sanitize(u.avatar)}" style="width:100%;height:100%;object-fit:cover;" alt="Avatar">`; }
+  else { av.textContent = u.name.charAt(0).toUpperCase(); }
+
+  // Banner color basado en id
+  const hash = u.id.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+  const hue = hash % 360;
+  document.getElementById('profile-banner').style.background =
+    `linear-gradient(135deg, hsl(${hue},40%,15%), hsl(${(hue+40)%360},50%,25%))`;
+
+  // Acciones
+  const actions = document.getElementById('profile-actions');
+  if (_isOwnProfile) {
+    actions.innerHTML = `<button onclick="openEditProfile()" class="btn-sub">Editar perfil</button>`;
+    document.getElementById('tab-history-btn').style.display = '';
+  } else {
+    const subbed = isSubscribedTo(u.id);
+    actions.innerHTML = `<button onclick="doSubProfile(this)" class="btn-sub ${subbed ? 'subbed' : ''}">${subbed ? 'Suscrito ✓' : 'Suscribirse'}</button>`;
+  }
+
+  // About
+  document.getElementById('about-bio').textContent = u.bio || 'Sin descripción.';
+  document.getElementById('about-country').textContent = u.country ? '📍 ' + u.country : '';
+  const linkEl = document.getElementById('about-link');
+  if (u.externalLink) linkEl.innerHTML = `🔗 <a href="${sanitize(u.externalLink)}" target="_blank" rel="noopener">${sanitize(u.externalLink)}</a>`;
+  document.getElementById('about-stats').innerHTML =
+    `${formatNumber(u.subscribers||0)} suscriptores · ${vids.length} videos · ${formatNumber(totalViews)} visualizaciones`;
+
+  renderVideosTab(vids);
+  renderPlaylistsTab();
+  if (_isOwnProfile) renderHistoryTab();
+}
+
+function renderVideosTab(vids) {
+  const grid = document.getElementById('profile-video-grid');
+  const msg = document.getElementById('no-videos-msg');
+  const visible = _isOwnProfile ? vids : vids.filter(v => v.visibility === 'public');
+  if (!visible.length) { msg.style.display = ''; grid.innerHTML = ''; return; }
+  msg.style.display = 'none';
+  grid.innerHTML = visible.map(v => {
+    const bg = thumbColor(v.id);
+    const badgeMap = { unlisted:'No listado', private:'Privado' };
+    const badgeClass = v.visibility === 'unlisted' ? 'unlisted' : v.visibility === 'private' ? 'private' : '';
+    return `<div class="vg-card" onclick="window.location.href='watch.html?v=${v.id}'">
+      <div class="vg-thumb" style="background:${v.thumb ? '' : bg}${v.thumb ? `;background-image:url(${sanitize(v.thumb)});background-size:cover;` : ''}">
+        <div class="vg-overlay"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7L8 5z" fill="#fff"/></svg></div>
+        <div class="vg-duration">${v.duration || '0:00'}</div>
+      </div>
+      <div class="vg-title">${sanitize(v.title)}${badgeClass ? `<span class="visbadge ${badgeClass}">${badgeMap[v.visibility]}</span>` : ''}</div>
+      <div class="vg-meta">${formatNumber(v.views||0)} visualizaciones · ${formatRelativeTime(v.createdAt)}</div>
+      ${_isOwnProfile ? `<div style="display:flex;gap:6px;margin-top:4px;" onclick="event.stopPropagation()"><button onclick="deleteOwnVideo('${v.id}')" style="font-size:11px;padding:2px 8px;background:#fee;border:1px solid #fcc;border-radius:2px;cursor:pointer;">Eliminar</button></div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function deleteOwnVideo(id) {
+  if (!confirm('¿Eliminar este video? Esta acción no se puede deshacer.')) return;
+  const result = deleteUserVideo(id);
+  if (!result.ok) { showToast(result.error); return; }
+  showToast('Video eliminado');
+  loadProfile();
+}
+
+function renderPlaylistsTab() {
+  const grid = document.getElementById('profile-playlists-grid');
+  const msg = document.getElementById('no-pl-msg');
+  const playlists = getUserPlaylists(_profileUser.id).filter(p => _isOwnProfile || p.visibility === 'public');
+  if (_isOwnProfile) {
+    document.getElementById('new-pl-btn-wrap').innerHTML =
+      `<button onclick="openNewPlaylist()" style="padding:5px 14px;background:var(--accent-grad);color:#fff;border:none;border-radius:2px;font-size:12px;font-weight:bold;cursor:pointer;">+ Nueva lista</button>`;
+  }
+  if (!playlists.length) { msg.style.display = ''; grid.innerHTML = ''; return; }
+  msg.style.display = 'none';
+  grid.innerHTML = playlists.map(pl => {
+    const firstVid = pl.videoIds.length ? getVideoById(pl.videoIds[0]) : null;
+    const thumb = firstVid?.thumb || null;
+    const bg = firstVid ? thumbColor(firstVid.id) : '#1a1a2e';
+    return `<div class="vg-card" onclick="window.location.href='playlist.html?id=${pl.id}&user=${_profileUser.id}'">
+      <div class="vg-thumb" style="background:${thumb ? '' : bg}${thumb ? `;background-image:url(${sanitize(thumb)});background-size:cover;` : ''}">
+        <div class="vg-overlay"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h10" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/></svg></div>
+      </div>
+      <div class="vg-title">${sanitize(pl.name)}</div>
+      <div class="vg-meta">${pl.videoIds.length} videos${pl.visibility === 'private' ? ' · Privada' : ''}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderHistoryTab() {
+  const list = document.getElementById('history-list');
+  const history = (Auth.user?.watchHistory || []).slice(0, 50);
+  if (!history.length) { list.innerHTML = '<p class="text-muted">Sin historial todavía.</p>'; return; }
+  list.innerHTML = history.map(h => {
+    const v = getVideoById(h.videoId);
+    if (!v) return '';
+    const n = normalizeVideo(v);
+    return `<div class="history-item">
+      <a href="watch.html?v=${v.id}" style="display:flex;align-items:center;gap:10px;flex:1;text-decoration:none;color:var(--text);">
+        <div style="width:80px;height:45px;background:${v.thumb ? '' : thumbColor(v.id)}${v.thumb ? `;background-image:url(${sanitize(v.thumb)});background-size:cover;` : ''};border-radius:2px;flex-shrink:0;"></div>
+        <div>
+          <div style="font-size:13px;font-weight:bold;">${sanitize(n.title)}</div>
+          <div style="font-size:11px;color:var(--text-muted);">${sanitize(n.channelName)} · ${formatRelativeTime(h.watchedAt)}</div>
+        </div>
+      </a>
+      <button onclick="doRemoveHistory('${v.id}','${h.watchedAt}')" style="font-size:11px;padding:2px 8px;background:#eee;border:1px solid var(--border);border-radius:2px;cursor:pointer;flex-shrink:0;">Quitar</button>
+    </div>`;
+  }).join('');
+}
+
+function doRemoveHistory(videoId, watchedAt) {
+  removeFromHistory(videoId, watchedAt);
+  renderHistoryTab();
+}
+
+function doClearHistory() {
+  if (!confirm('¿Borrar todo el historial?')) return;
+  clearHistory();
+  renderHistoryTab();
+  showToast('Historial borrado');
+}
+
+function doSubProfile(btn) {
+  if (!requireAuth(null, 'Inicia sesión para suscribirte')) return;
+  const result = toggleSubscription(_profileUser.id);
+  if (result.ok) {
+    btn.textContent = result.subscribed ? 'Suscrito ✓' : 'Suscribirse';
+    btn.classList.toggle('subbed', result.subscribed);
+    document.getElementById('stat-subs').textContent = formatNumber(_profileUser.subscribers || 0);
+    _profileUser = Auth.getUser(_profileUser.id) || _profileUser;
+  }
+}
+
+function switchTab(el, tab) {
+  document.querySelectorAll('.ch-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  ['videos','playlists','history','about'].forEach(t => {
+    const el2 = document.getElementById('tab-' + t);
+    if (el2) el2.classList.toggle('hidden', t !== tab);
+  });
+}
+
+function openNewPlaylist() {
+  const name = prompt('Nombre de la nueva lista:');
+  if (!name) return;
+  const result = createPlaylist(name.trim(), 'public');
+  if (!result.ok) { showToast(result.error); return; }
+  showToast('Lista creada');
+  renderPlaylistsTab();
+}
+
+/* ---- EDITAR PERFIL ---- */
+function openEditProfile() {
+  const u = Auth.user;
+  if (!u) return;
+  document.getElementById('edit-name').value = u.name || '';
+  document.getElementById('edit-handle').value = u.handle || '';
+  document.getElementById('edit-bio').value = u.bio || '';
+  document.getElementById('edit-country').value = u.country || '';
+  document.getElementById('edit-link').value = u.externalLink || '';
+  const preview = document.getElementById('edit-avatar-preview');
+  if (u.avatar) preview.innerHTML = `<img src="${sanitize(u.avatar)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="Avatar">`;
+  else preview.textContent = u.name.charAt(0).toUpperCase();
+  _newAvatarDataUrl = null;
+  document.getElementById('modal-edit-profile').classList.add('open');
+}
+
+function closeEditProfile() {
+  document.getElementById('modal-edit-profile').classList.remove('open');
+}
+
+function previewAvatar(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 200 * 1024) { showToast('La imagen supera el límite de 200 KB'); return; }
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 128; canvas.height = 128;
+      canvas.getContext('2d').drawImage(img, 0, 0, 128, 128);
+      _newAvatarDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+      const preview = document.getElementById('edit-avatar-preview');
+      preview.innerHTML = `<img src="${_newAvatarDataUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="Avatar">`;
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function saveProfile(e) {
+  e.preventDefault();
+  const fields = {
+    name: document.getElementById('edit-name').value.trim(),
+    handle: document.getElementById('edit-handle').value.trim().replace(/^@/, ''),
+    bio: document.getElementById('edit-bio').value.trim(),
+    country: document.getElementById('edit-country').value.trim(),
+    externalLink: document.getElementById('edit-link').value.trim(),
+  };
+  if (_newAvatarDataUrl) fields.avatar = _newAvatarDataUrl;
+  const result = Auth.updateUser(fields);
+  if (!result.ok) { showToast(result.error); return; }
+  closeEditProfile();
+  showToast('Perfil actualizado');
+  loadProfile();
+}
+
+loadProfile();
+</script>
+</body>
+</html>

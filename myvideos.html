@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mis videos - VideoNow</title>
+<link rel="icon" href="assets/logo.png">
+<link rel="stylesheet" href="css/main.css">
+<style>
+.mv-summary { display:flex; gap:24px; margin-bottom:18px; }
+.mv-summary .box { background:#fff;border:1px solid var(--border);border-radius:3px;padding:12px 18px;text-align:center;min-width:120px; }
+.mv-summary .box .num { font-size:22px;font-weight:bold;color:var(--accent-dark); }
+.mv-summary .box .lbl { font-size:11px;color:var(--text-muted); }
+table.mv-table { width:100%; border-collapse:collapse; background:#fff; border:1px solid var(--border); border-radius:3px; overflow:hidden; }
+table.mv-table th { text-align:left; font-size:11px; color:var(--text-muted); text-transform:uppercase; padding:10px 12px; border-bottom:1px solid var(--border); background:#f8f8f8; }
+table.mv-table td { padding:10px 12px; border-bottom:1px solid #f0f0f0; font-size:13px; vertical-align:middle; }
+table.mv-table tr:last-child td { border-bottom:none; }
+.mv-thumb { width:90px; height:50px; border-radius:2px; flex-shrink:0; background-size:cover; background-position:center; }
+.mv-actions button { font-size:11px; padding:3px 9px; border-radius:2px; cursor:pointer; margin-right:4px; }
+.mv-edit-btn { background:#eef; border:1px solid #ccd; }
+.mv-del-btn { background:#fee; border:1px solid #fcc; }
+.mv-copy-btn { background:#eee; border:1px solid var(--border); }
+@media (max-width: 700px) { table.mv-table thead { display:none; } table.mv-table td { display:block; } }
+</style>
+</head>
+<body data-page="myvideos">
+
+<header id="header">
+  <a href="index.html" id="logo"><img src="assets/logo.png" alt="VideoNow"></a>
+  <form id="search-form" action="search.html" role="search">
+    <div id="search-wrap">
+      <input type="text" id="search-input" name="q" placeholder="Buscar" autocomplete="off" maxlength="200">
+      <button type="submit" id="search-btn" aria-label="Buscar"><svg viewBox="0 0 24 24"><path d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" stroke="#555" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg></button>
+    </div>
+  </form>
+  <div id="header-right">
+    <a href="browse.html">Explorar</a>
+    <span class="hdr-sep">|</span>
+    <a href="#" class="btn-upload-hdr" onclick="openUploadModal(event)"><svg viewBox="0 0 24 24"><path d="M12 16V4m0 0l-4 4m4-4l4 4M4 20h16" stroke="#666" stroke-width="2" fill="none" stroke-linecap="round"/></svg>Subir</a>
+    <span id="header-auth-slot" style="display:flex;align-items:center;gap:14px;"></span>
+  </div>
+</header>
+<nav id="navbar">
+  <a href="index.html" class="nav-item" data-nav="home">Videos</a>
+  <a href="music.html" class="nav-item" data-nav="music">Música</a>
+  <a href="movies.html" class="nav-item" data-nav="movies">Películas</a>
+  <a href="shows.html" class="nav-item" data-nav="shows">Series</a>
+  <a href="live.html" class="nav-item" data-nav="live">En directo</a>
+  <a href="education.html" class="nav-item" data-nav="education">Educación</a>
+  <a href="news.html" class="nav-item" data-nav="news">Noticias</a>
+</nav>
+
+<div class="content-offset">
+  <main id="main">
+    <h1 style="font-size:18px;margin-bottom:14px;">Mis videos</h1>
+
+    <div class="mv-summary">
+      <div class="box"><div class="num" id="sum-total">0</div><div class="lbl">Total videos</div></div>
+      <div class="box"><div class="num" id="sum-views">0</div><div class="lbl">Total visualizaciones</div></div>
+      <div class="box"><div class="num" id="sum-likes">0</div><div class="lbl">Total me gusta</div></div>
+    </div>
+
+    <div style="overflow-x:auto;">
+      <table class="mv-table">
+        <thead>
+          <tr><th>Video</th><th>Visibilidad</th><th>Fecha</th><th>Vistas</th><th>Me gusta</th><th>Acciones</th></tr>
+        </thead>
+        <tbody id="mv-tbody"></tbody>
+      </table>
+    </div>
+    <p id="mv-empty" class="text-muted hidden" style="padding:30px 0;text-align:center;">
+      Todavía no has subido ningún video. <a href="#" onclick="openUploadModal(event)">Sube el primero</a>.
+    </p>
+  </main>
+</div>
+
+<!-- Modal editar video -->
+<div class="modal-overlay" id="modal-edit-video">
+  <div class="modal">
+    <button class="modal-close" onclick="closeEditVideo()" aria-label="Cerrar">&times;</button>
+    <h2>Editar video</h2>
+    <form id="edit-video-form" onsubmit="saveEditVideo(event)">
+      <input type="hidden" id="edit-video-id">
+      <div class="form-group"><label>Título</label><input type="text" id="edit-video-title" maxlength="100" required></div>
+      <div class="form-group"><label>Descripción</label><textarea id="edit-video-desc" maxlength="5000" rows="3" style="width:100%;border:1px solid var(--border-dark);border-radius:2px;padding:6px 8px;font-size:13px;font-family:inherit;resize:vertical;"></textarea></div>
+      <div class="form-group"><label>Categoría</label>
+        <select id="edit-video-cat">
+          <option value="entertainment">Entretenimiento</option><option value="music">Música</option>
+          <option value="gaming">Videojuegos</option><option value="news">Noticias</option>
+          <option value="education">Educación</option><option value="movies">Películas</option>
+          <option value="shows">Series</option><option value="tech">Tecnología</option>
+          <option value="sports">Deportes</option><option value="comedy">Humor</option>
+          <option value="other">Otro</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Tags</label><input type="text" id="edit-video-tags" maxlength="200"></div>
+      <div class="form-group"><label>Visibilidad</label>
+        <select id="edit-video-vis">
+          <option value="public">Público</option><option value="unlisted">No listado</option><option value="private">Privado</option>
+        </select>
+      </div>
+      <button type="submit" class="btn-submit">Guardar cambios</button>
+    </form>
+  </div>
+</div>
+
+<!-- Upload modal -->
+<div class="modal-overlay" id="modal-upload">
+  <div class="modal">
+    <button class="modal-close" onclick="closeUploadModal()" aria-label="Cerrar">&times;</button>
+    <div id="upload-step-1"><h2>Subir un video</h2><div class="upload-drop" onclick="document.getElementById('upload-file-input').click()"><svg viewBox="0 0 24 24"><path d="M12 16V4m0 0l-4 4m4-4l4 4M4 20h16" stroke="#bbb" stroke-width="2" fill="none" stroke-linecap="round"/></svg><p><strong>Haz clic para elegir</strong> o arrastra aquí</p><p class="text-muted">MP4, WebM, MOV, MKV, AVI — máx. 100 GB</p></div><input type="file" id="upload-file-input" accept=".mp4,.webm,.mov,.mkv,.avi,video/*" class="hidden" onchange="onUploadFileSelected(this)"><p class="security-note">🔒 Límite 10 subidas/día</p></div>
+    <div id="upload-step-2" class="hidden"><h2>Detalles</h2><p class="text-muted" style="font-size:12px;margin-bottom:10px;">📁 <span id="upload-filename"></span> · <span id="upload-filesize"></span></p><form id="upload-metadata-form" onsubmit="submitUploadMetadata(event)"><div class="form-group"><label>Título</label><input type="text" id="upload-title" maxlength="100" required placeholder="Título"></div><div class="form-group"><label>Descripción</label><textarea id="upload-desc" maxlength="5000" rows="3" style="width:100%;border:1px solid var(--border-dark);border-radius:2px;padding:6px 8px;font-size:13px;font-family:inherit;resize:vertical;"></textarea></div><div class="form-group"><label>Categoría</label><select id="upload-cat"><option value="entertainment">Entretenimiento</option><option value="music">Música</option><option value="gaming">Videojuegos</option><option value="other">Otro</option></select></div><div class="form-group"><label>Tags</label><input type="text" id="upload-tags" placeholder="tag1, tag2" oninput="onUploadTagsInput(this)"></div><div class="form-group"><label>Visibilidad</label><div style="display:flex;gap:14px;font-size:13px;margin-top:4px;"><label style="display:flex;align-items:center;gap:5px;font-weight:normal;"><input type="radio" name="upload-visibility" value="public" checked style="width:auto;"> Público</label><label style="display:flex;align-items:center;gap:5px;font-weight:normal;"><input type="radio" name="upload-visibility" value="unlisted" style="width:auto;"> No listado</label><label style="display:flex;align-items:center;gap:5px;font-weight:normal;"><input type="radio" name="upload-visibility" value="private" style="width:auto;"> Privado</label></div></div><button type="submit" class="btn-submit">Subir →</button></form></div>
+    <div id="upload-step-3" class="hidden"><h2>Subiendo…</h2><div class="progress-bar"><div class="progress-fill" id="upload-progress-fill"></div></div><p id="upload-status-text" class="text-muted" style="text-align:center;font-size:13px;">0%</p></div>
+    <div id="upload-step-4" class="hidden" style="text-align:center;"><h2>¡Publicado! 🎉</h2><img id="upload-success-thumb" class="hidden" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBTAA7" style="width:100%;max-width:280px;border-radius:4px;margin:10px auto;display:block;" alt="Miniatura"><a id="upload-success-watch-btn" href="#" class="btn-submit" style="display:inline-block;text-decoration:none;margin-top:10px;">Ver video</a><button onclick="uploadAnother()" class="btn-oauth" style="margin-top:8px;">Subir otro</button></div>
+  </div>
+</div>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script src="js/env.js" onerror="void 0"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-init.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/data.js"></script>
+<script src="js/notifications.js"></script>
+<script src="js/comments.js"></script>
+<script src="js/playlists.js"></script>
+<script src="js/interactions.js"></script>
+<script src="js/upload.js"></script>
+<script src="js/security.js"></script>
+<script src="js/layout.js"></script>
+<script>
+'use strict';
+
+function loadMyVideos() {
+  if (!requireAuth(null, 'Inicia sesión para ver tus videos')) return;
+
+  const videos = getUserVideos().filter(v => v.uploadedBy === Auth.user.id)
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+  const totalViews = videos.reduce((s, v) => s + (v.views || 0), 0);
+  const totalLikes = videos.reduce((s, v) => s + (v.likes || 0), 0);
+  document.getElementById('sum-total').textContent = videos.length;
+  document.getElementById('sum-views').textContent = formatNumber(totalViews);
+  document.getElementById('sum-likes').textContent = formatNumber(totalLikes);
+
+  const tbody = document.getElementById('mv-tbody');
+  const empty = document.getElementById('mv-empty');
+
+  if (!videos.length) {
+    empty.classList.remove('hidden');
+    tbody.innerHTML = '';
+    return;
+  }
+  empty.classList.add('hidden');
+
+  const visMap = { public: 'Público', unlisted: 'No listado', private: 'Privado' };
+
+  tbody.innerHTML = videos.map(v => `
+    <tr>
+      <td style="display:flex;align-items:center;gap:10px;">
+        <div class="mv-thumb" style="background:${v.thumb ? `url(${sanitize(v.thumb)})` : thumbColor(v.id)}"></div>
+        <a href="watch.html?v=${v.id}" style="font-weight:bold;color:var(--text);text-decoration:none;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${sanitize(v.title)}</a>
+      </td>
+      <td>${visMap[v.visibility] || 'Público'}</td>
+      <td>${new Date(v.createdAt).toLocaleDateString('es-ES')}</td>
+      <td>${formatNumber(v.views || 0)}</td>
+      <td>${formatNumber(v.likes || 0)}</td>
+      <td class="mv-actions">
+        <button class="mv-edit-btn" onclick="openEditVideo('${v.id}')">Editar</button>
+        <button class="mv-copy-btn" onclick="copyVideoLink('${v.id}')">Copiar link</button>
+        <button class="mv-del-btn" onclick="confirmDeleteVideo('${v.id}')">Eliminar</button>
+      </td>
+    </tr>`).join('');
+}
+
+function copyVideoLink(id) {
+  const url = window.location.origin + window.location.pathname.replace('myvideos.html', '') + 'watch.html?v=' + id;
+  if (navigator.clipboard) navigator.clipboard.writeText(url).then(() => showToast('¡Enlace copiado!'));
+  else showToast('¡Enlace copiado!');
+}
+
+function confirmDeleteVideo(id) {
+  if (!confirm('¿Eliminar este video? Esta acción no se puede deshacer.')) return;
+  const result = deleteUserVideo(id);
+  if (!result.ok) { showToast(result.error); return; }
+  showToast('Video eliminado');
+  loadMyVideos();
+}
+
+function openEditVideo(id) {
+  const video = getUserVideos().find(v => v.id === id);
+  if (!video) return;
+  document.getElementById('edit-video-id').value = id;
+  document.getElementById('edit-video-title').value = video.title;
+  document.getElementById('edit-video-desc').value = video.desc || '';
+  document.getElementById('edit-video-cat').value = video.cat || 'other';
+  document.getElementById('edit-video-tags').value = (video.tags || []).join(', ');
+  document.getElementById('edit-video-vis').value = video.visibility || 'public';
+  document.getElementById('modal-edit-video').classList.add('open');
+}
+
+function closeEditVideo() {
+  document.getElementById('modal-edit-video').classList.remove('open');
+}
+
+function saveEditVideo(e) {
+  e.preventDefault();
+  const id = document.getElementById('edit-video-id').value;
+  const fields = {
+    title: document.getElementById('edit-video-title').value.trim().slice(0, 100),
+    desc: document.getElementById('edit-video-desc').value.trim().slice(0, 5000),
+    cat: document.getElementById('edit-video-cat').value,
+    tags: document.getElementById('edit-video-tags').value.split(',').map(t => t.trim()).filter(Boolean).slice(0, 10),
+    visibility: document.getElementById('edit-video-vis').value,
+  };
+  const result = updateUserVideo(id, fields);
+  if (!result.ok) { showToast(result.error); return; }
+  closeEditVideo();
+  showToast('Video actualizado');
+  loadMyVideos();
+}
+
+loadMyVideos();
+</script>
+</body>
+</html>

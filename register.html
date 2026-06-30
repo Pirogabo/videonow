@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Create account - VideoNow</title>
+<title>Crear cuenta - VideoNow</title>
 <link rel="icon" href="assets/logo.png">
 <link rel="stylesheet" href="css/main.css">
 </head>
@@ -12,7 +12,7 @@
 <header id="header">
   <a href="index.html" id="logo"><img src="assets/logo.png" alt="VideoNow"></a>
   <div id="header-right" style="margin-left:auto;">
-    <a href="login.html">Sign in</a>
+    <a href="login.html">Iniciar sesión</a>
   </div>
 </header>
 
@@ -21,51 +21,59 @@
 <div id="auth-shell">
   <div class="auth-box">
     <div class="auth-logo"><img src="assets/logo.png" alt="VideoNow"></div>
-    <h2>Create account</h2>
-    <p class="auth-tagline">Join VideoNow today</p>
+    <h2>Crear cuenta</h2>
+    <p class="auth-tagline">Únete a VideoNow hoy</p>
 
-    <div class="age-notice">⚠️ You must be 13 years or older to create an account on VideoNow.</div>
+    <div class="age-notice">⚠️ Debes tener 13 años o más para crear una cuenta en VideoNow.</div>
 
     <form id="register-form" onsubmit="submitRegister(event)">
       <div class="form-group">
-        <label for="reg-name">Name</label>
-        <input type="text" id="reg-name" placeholder="Your name" required minlength="2" maxlength="50" autocomplete="name">
+        <label for="reg-name">Nombre</label>
+        <input type="text" id="reg-name" placeholder="Tu nombre" required minlength="2" maxlength="50" autocomplete="name">
       </div>
       <div class="form-group">
         <label for="reg-email">Email</label>
-        <input type="email" id="reg-email" placeholder="you@example.com" required maxlength="254" autocomplete="email">
+        <input type="email" id="reg-email" placeholder="tu@ejemplo.com" required maxlength="254" autocomplete="email">
       </div>
       <div class="form-group">
-        <label for="reg-password">Password</label>
-        <input type="password" id="reg-password" placeholder="Min. 8 characters" required minlength="8" maxlength="128" autocomplete="new-password">
+        <label for="reg-password">Contraseña</label>
+        <input type="password" id="reg-password" placeholder="Mín. 8 caracteres" required minlength="8" maxlength="128" autocomplete="new-password">
         <small>Usa al menos 8 caracteres, combina letras y números.</small>
       </div>
       <div class="form-group">
-        <label for="reg-dob">Date of birth</label>
+        <label for="reg-dob">Fecha de nacimiento</label>
         <input type="date" id="reg-dob" required autocomplete="bday">
-        <small>You must be 13 or older to use VideoNow.</small>
+        <small>Debes tener 13 años o más para usar VideoNow.</small>
       </div>
       <div class="form-group checkbox">
         <input type="checkbox" id="reg-agree" required>
         <label for="reg-agree">
-          I agree to the <a href="terms.html">Terms of Service</a> and <a href="privacy.html">Privacy Policy</a>, including cookie usage. I confirm I am 13 or older.
+          Acepto los <a href="terms.html">Términos del Servicio</a> y la <a href="privacy.html">Política de Privacidad</a>, incluido el uso de cookies. Confirmo que tengo 13 años o más.
         </label>
       </div>
-      <button type="submit" class="btn-submit">Create account</button>
+      <button type="submit" class="btn-submit">Crear cuenta</button>
     </form>
-    <p class="security-note">🔒 Protected by rate limiting &amp; GDPR-compliant</p>
+    <p class="security-note">🔒 Protegido con límite de intentos y cumplimiento GDPR</p>
     <div class="auth-switch">
-      Already have an account? <a href="login.html">Sign in</a>
+      ¿Ya tienes cuenta? <a href="login.html">Iniciar sesión</a>
     </div>
   </div>
 </div>
 
 <div id="toast" role="status" aria-live="polite"></div>
 
+<!-- Orden importante: env (claves) → librería Supabase → init propio → fallback local → resto -->
+<script src="js/env.js" onerror="console.warn('[VideoNow] js/env.js no encontrado — copia js/env.example.js y configura tus claves, o despliega en Vercel con las Environment Variables puestas.')"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase-init.js"></script>
-<script src="js/security.js"></script>
+<script src="js/auth.js"></script>
 <script src="js/data.js"></script>
+<script src="js/notifications.js"></script>
+<script src="js/comments.js"></script>
+<script src="js/playlists.js"></script>
+<script src="js/interactions.js"></script>
+<script src="js/upload.js"></script>
+<script src="js/security.js"></script>
 <script src="js/layout.js"></script>
 <script>
 // Bloquear fechas que indiquen menos de 13 años directamente en el input
@@ -99,31 +107,28 @@ async function submitRegister(e) {
   if (!isOldEnough(dob, 13)) { showToast('Debes tener 13 años o más para registrarte.'); return; }
   if (!agreed) { showToast('Debes aceptar los Términos y la Política de Privacidad'); return; }
 
+  const submitBtn = document.querySelector('#register-form button[type="submit"]');
+  submitBtn.disabled = true;
   showToast('Creando tu cuenta…');
-  try {
-    const { data, error } = await supabase.auth.signUp({
+
+  if (isSupabaseReady()) {
+    // Camino real: Supabase Auth
+    const { data, error } = await VN_SUPABASE.auth.signUp({
       email,
       password,
-      options: {
-        data: {
-          name,
-          dob
-        }
-      }
+      options: { data: { name, dob } }
     });
-
-    if (error) {
-      showToast('Error: ' + error.message);
-      console.error('Signup error:', error);
-      return;
-    }
-
-    console.log('✅ Cuenta creada:', data.user?.email);
+    submitBtn.disabled = false;
+    if (error) { showToast('Error: ' + error.message); return; }
     showToast('¡Revisa tu email para confirmar tu cuenta!');
     setTimeout(() => window.location.href = 'login.html', 1200);
-  } catch (err) {
-    showToast('Error de conexión');
-    console.error('Exception:', err);
+  } else {
+    // Camino local: sistema de localStorage (js/auth.js) — funciona sin backend
+    const result = Auth.register({ name, email, password, dob });
+    submitBtn.disabled = false;
+    if (!result.ok) { showToast(result.error); return; }
+    showToast('¡Cuenta creada! Ya puedes iniciar sesión.');
+    setTimeout(() => window.location.href = 'login.html', 1000);
   }
 }
 </script>

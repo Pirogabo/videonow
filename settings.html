@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ajustes - VideoNow</title>
+<link rel="icon" href="assets/logo.png">
+<link rel="stylesheet" href="css/main.css">
+<style>
+.settings-layout { display:flex; gap:24px; max-width:900px; }
+.settings-nav { width:180px; flex-shrink:0; }
+.settings-nav-item { display:block; padding:9px 12px; font-size:13px; color:var(--text); cursor:pointer; border-radius:2px; text-decoration:none; }
+.settings-nav-item:hover { background:#f0f0f0; text-decoration:none; }
+.settings-nav-item.active { background:rgba(0,201,133,0.12); color:var(--accent-dark); font-weight:bold; }
+.settings-panel { flex:1; background:#fff; border:1px solid var(--border); border-radius:3px; padding:20px 24px; }
+.settings-panel h2 { font-size:16px; margin-bottom:16px; }
+.toggle-row { display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid #f0f0f0; }
+.toggle-row:last-child { border-bottom:none; }
+.toggle-row .lbl { font-size:13px; color:var(--text); }
+.toggle-row .desc { font-size:11px; color:var(--text-muted); margin-top:2px; }
+.switch { position:relative; width:40px; height:22px; flex-shrink:0; }
+.switch input { opacity:0; width:0; height:0; }
+.switch .slider { position:absolute; top:0; right:0; bottom:0; left:0; background:#ccc; border-radius:22px; cursor:pointer; transition:.2s; }
+.switch .slider::before { content:''; position:absolute; width:18px; height:18px; left:2px; top:2px; background:#fff; border-radius:50%; transition:.2s; }
+.switch input:checked + .slider { background:var(--accent-dark); }
+.switch input:checked + .slider::before { transform:translateX(18px); }
+.danger-btn { background:#fee; border:1px solid #fcc; color:#c0392b; padding:7px 14px; border-radius:2px; font-size:13px; cursor:pointer; }
+</style>
+</head>
+<body data-page="settings">
+
+<header id="header">
+  <a href="index.html" id="logo"><img src="assets/logo.png" alt="VideoNow"></a>
+  <div id="header-right" style="margin-left:auto;display:flex;gap:14px;align-items:center;">
+    <span id="header-auth-slot" style="display:flex;align-items:center;gap:14px;"></span>
+  </div>
+</header>
+<nav id="navbar"></nav>
+
+<div class="content-offset">
+  <main id="main">
+    <h1 style="font-size:18px;margin-bottom:16px;">Ajustes</h1>
+    <div class="settings-layout">
+      <nav class="settings-nav">
+        <a href="#" class="settings-nav-item active" data-panel="account" onclick="switchPanel(event,this)">Cuenta</a>
+        <a href="#" class="settings-nav-item" data-panel="password" onclick="switchPanel(event,this)">Contraseña</a>
+        <a href="#" class="settings-nav-item" data-panel="privacy" onclick="switchPanel(event,this)">Privacidad</a>
+        <a href="#" class="settings-nav-item" data-panel="notifications" onclick="switchPanel(event,this)">Notificaciones</a>
+        <a href="#" class="settings-nav-item" data-panel="data" onclick="switchPanel(event,this)">Datos</a>
+      </nav>
+
+      <div class="settings-panel">
+        <!-- Cuenta -->
+        <div id="panel-account">
+          <h2>Cuenta</h2>
+          <form onsubmit="saveAccount(event)">
+            <div class="form-group"><label>Email</label><input type="email" id="acc-email" disabled style="background:#f5f5f5;"></div>
+            <div class="form-group"><label>Nombre</label><input type="text" id="acc-name" maxlength="50" required></div>
+            <div class="form-group"><label>Usuario</label><input type="text" id="acc-handle" maxlength="30"></div>
+            <div class="form-group"><label>Bio</label><textarea id="acc-bio" maxlength="500" rows="3" style="width:100%;border:1px solid var(--border-dark);border-radius:2px;padding:6px 8px;font-size:13px;font-family:inherit;resize:vertical;"></textarea></div>
+            <div class="form-group"><label>País</label><input type="text" id="acc-country" maxlength="60"></div>
+            <div class="form-group"><label>Enlace externo</label><input type="url" id="acc-link" maxlength="200"></div>
+            <button type="submit" class="btn-submit" style="width:auto;padding:0 24px;">Guardar</button>
+          </form>
+        </div>
+
+        <!-- Contraseña -->
+        <div id="panel-password" class="hidden">
+          <h2>Contraseña</h2>
+          <form onsubmit="savePassword(event)">
+            <div class="form-group"><label>Contraseña actual</label><input type="password" id="pw-current" required maxlength="128"></div>
+            <div class="form-group"><label>Nueva contraseña</label><input type="password" id="pw-new" required minlength="8" maxlength="128"></div>
+            <div class="form-group"><label>Repetir nueva contraseña</label><input type="password" id="pw-confirm" required minlength="8" maxlength="128"></div>
+            <button type="submit" class="btn-submit" style="width:auto;padding:0 24px;">Actualizar contraseña</button>
+          </form>
+        </div>
+
+        <!-- Privacidad -->
+        <div id="panel-privacy" class="hidden">
+          <h2>Privacidad</h2>
+          <div class="toggle-row">
+            <div><div class="lbl">Historial de visualización activo</div><div class="desc">Si lo desactivas, no se guardarán los videos que veas.</div></div>
+            <label class="switch"><input type="checkbox" id="priv-history" onchange="saveToggle('historyEnabled', this.checked)"><span class="slider"></span></label>
+          </div>
+          <div class="toggle-row">
+            <div><div class="lbl">Perfil público</div><div class="desc">Si lo desactivas, otros usuarios no podrán ver tu perfil completo.</div></div>
+            <label class="switch"><input type="checkbox" id="priv-public" onchange="saveToggle('publicProfile', this.checked)"><span class="slider"></span></label>
+          </div>
+        </div>
+
+        <!-- Notificaciones -->
+        <div id="panel-notifications" class="hidden">
+          <h2>Notificaciones</h2>
+          <div class="toggle-row">
+            <div><div class="lbl">Comentarios</div><div class="desc">Avisarme cuando alguien comente en mis videos.</div></div>
+            <label class="switch"><input type="checkbox" id="notif-comments" onchange="saveToggle('notifyComments', this.checked)"><span class="slider"></span></label>
+          </div>
+          <div class="toggle-row">
+            <div><div class="lbl">Me gusta</div><div class="desc">Avisarme cuando le den me gusta a mis videos.</div></div>
+            <label class="switch"><input type="checkbox" id="notif-likes" onchange="saveToggle('notifyLikes', this.checked)"><span class="slider"></span></label>
+          </div>
+          <div class="toggle-row">
+            <div><div class="lbl">Nuevos suscriptores</div><div class="desc">Avisarme cuando alguien se suscriba a mi canal.</div></div>
+            <label class="switch"><input type="checkbox" id="notif-subs" onchange="saveToggle('notifySubscribers', this.checked)"><span class="slider"></span></label>
+          </div>
+        </div>
+
+        <!-- Datos -->
+        <div id="panel-data" class="hidden">
+          <h2>Datos</h2>
+          <p style="font-size:13px;color:var(--text-mid);margin-bottom:14px;">Descarga una copia de todos tus datos almacenados en VideoNow, o elimina tu cuenta permanentemente.</p>
+          <button onclick="exportData()" class="btn-oauth" style="width:auto;padding:0 20px;margin-bottom:18px;">⬇ Exportar mis datos</button>
+          <div style="border-top:1px solid var(--border);padding-top:16px;">
+            <p style="font-size:13px;color:#c0392b;font-weight:bold;margin-bottom:8px;">Eliminar cuenta</p>
+            <p style="font-size:12px;color:var(--text-muted);margin-bottom:10px;">Esta acción es irreversible. Se eliminarán tu perfil, tus videos, comentarios y todo lo asociado a tu cuenta.</p>
+            <button onclick="confirmDeleteAccount()" class="danger-btn">Eliminar mi cuenta</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script src="js/env.js" onerror="void 0"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-init.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/data.js"></script>
+<script src="js/notifications.js"></script>
+<script src="js/comments.js"></script>
+<script src="js/playlists.js"></script>
+<script src="js/interactions.js"></script>
+<script src="js/upload.js"></script>
+<script src="js/security.js"></script>
+<script src="js/layout.js"></script>
+<script>
+'use strict';
+
+function switchPanel(e, el) {
+  e.preventDefault();
+  document.querySelectorAll('.settings-nav-item').forEach(x => x.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('[id^="panel-"]').forEach(p => p.classList.add('hidden'));
+  document.getElementById('panel-' + el.dataset.panel).classList.remove('hidden');
+}
+
+function loadSettings() {
+  if (!requireAuth(null, 'Inicia sesión para ver tus ajustes')) return;
+  const u = Auth.user;
+  document.getElementById('acc-email').value = u.email;
+  document.getElementById('acc-name').value = u.name || '';
+  document.getElementById('acc-handle').value = u.handle || '';
+  document.getElementById('acc-bio').value = u.bio || '';
+  document.getElementById('acc-country').value = u.country || '';
+  document.getElementById('acc-link').value = u.externalLink || '';
+
+  const s = u.settings || {};
+  document.getElementById('priv-history').checked = s.historyEnabled !== false;
+  document.getElementById('priv-public').checked = s.publicProfile !== false;
+  document.getElementById('notif-comments').checked = s.notifyComments !== false;
+  document.getElementById('notif-likes').checked = s.notifyLikes !== false;
+  document.getElementById('notif-subs').checked = s.notifySubscribers !== false;
+}
+
+function saveAccount(e) {
+  e.preventDefault();
+  const fields = {
+    name: document.getElementById('acc-name').value.trim(),
+    handle: document.getElementById('acc-handle').value.trim().replace(/^@/, ''),
+    bio: document.getElementById('acc-bio').value.trim(),
+    country: document.getElementById('acc-country').value.trim(),
+    externalLink: document.getElementById('acc-link').value.trim(),
+  };
+  const result = Auth.updateUser(fields);
+  if (!result.ok) { showToast(result.error); return; }
+  showToast('Cambios guardados');
+}
+
+function savePassword(e) {
+  e.preventDefault();
+  const current = document.getElementById('pw-current').value;
+  const next = document.getElementById('pw-new').value;
+  const confirm_ = document.getElementById('pw-confirm').value;
+  if (next !== confirm_) { showToast('Las contraseñas no coinciden'); return; }
+  const result = Auth.changePassword(current, next);
+  if (!result.ok) { showToast(result.error); return; }
+  showToast('Contraseña actualizada');
+  document.getElementById('pw-current').value = '';
+  document.getElementById('pw-new').value = '';
+  document.getElementById('pw-confirm').value = '';
+}
+
+function saveToggle(key, value) {
+  const settings = { ...(Auth.user.settings || {}), [key]: value };
+  Auth.updateUser({ settings });
+  showToast('Preferencia actualizada');
+}
+
+function exportData() {
+  const json = Auth.exportUserData();
+  if (!json) return;
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'videonow-datos-' + Auth.user.handle + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Descargando tus datos…');
+}
+
+function confirmDeleteAccount() {
+  if (!confirm('¿Seguro que quieres eliminar tu cuenta? Esta acción NO se puede deshacer.')) return;
+  if (!confirm('Última confirmación: se borrarán tu perfil, videos y comentarios. ¿Continuar?')) return;
+  Auth.deleteAccount();
+  showToast('Cuenta eliminada');
+  setTimeout(() => window.location.href = 'index.html', 800);
+}
+
+loadSettings();
+</script>
+</body>
+</html>

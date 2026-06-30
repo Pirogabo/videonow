@@ -166,6 +166,57 @@ CREATE INDEX idx_rate_limit ON public.rate_limit_log (ip_hash, action, created_a
 
 4. Habilita Auth providers: **Authentication → Providers** → activa Email, Google, Facebook (necesitas configurar OAuth apps en Google Cloud Console / Facebook Developers).
 
+5. Crea el bucket de Storage para los videos subidos por usuarios: **Storage → New bucket** → nombre `videos` → marca **Public bucket** (así `getPublicUrl()` funciona sin URLs firmadas). Luego, en **Storage → Policies** para ese bucket, añade:
+
+```sql
+-- Cualquiera puede leer (bucket público, pero esta policy es la que de verdad lo permite)
+CREATE POLICY "Videos públicos de lectura"
+ON storage.objects FOR SELECT
+USING (bucket_id = 'videos');
+
+-- Solo usuarios autenticados pueden subir, y solo dentro de su propia carpeta (su user.id)
+CREATE POLICY "Usuarios suben a su propia carpeta"
+ON storage.objects FOR INSERT
+WITH CHECK (bucket_id = 'videos' AND (storage.foldername(name))[1] = auth.uid()::text);
+
+-- Solo el propietario puede borrar sus propios archivos
+CREATE POLICY "Usuarios borran sus propios videos"
+ON storage.objects FOR DELETE
+USING (bucket_id = 'videos' AND (storage.foldername(name))[1] = auth.uid()::text);
+```
+
+> `js/upload.js` sube cada archivo bajo la ruta `{userId}/{timestamp}-{nombre}`, que es justo lo que estas policies esperan para identificar al propietario.
+
+---
+
+## 1.5. Arquitectura: localStorage (modo demo) ↔ Supabase (modo real)
+
+Este proyecto puede correr en dos modos a la vez, según si Supabase está configurado (`isSupabaseReady()` en `js/supabase-init.js`):
+
+| | Sin Supabase configurado | Con Supabase configurado |
+|---|---|---|
+| Auth (login/registro) | `js/auth.js` → localStorage | `VN_SUPABASE.auth.*` |
+| Subida de video | Bloqueada con aviso claro | `js/upload.js` → Supabase Storage real |
+| Perfiles, playlists, comentarios, notificaciones, likes/subs, historial | Todo en localStorage | **Sigue en localStorage** (ver nota abajo) |
+
+**Nota importante:** perfiles, playlists, comentarios, notificaciones e interacciones (likes/dislikes/subs/historial) usan **localStorage en ambos modos** — son los módulos `js/auth.js`, `js/playlists.js`, `js/comments.js`, `js/notifications.js` e `js/interactions.js`. Esto es intencional para que la demo funcione completa sin backend, pero significa que **esos datos no persisten entre navegadores ni dispositivos**, y se pierden si el usuario borra los datos del sitio.
+
+Si quieres que estos datos también vivan en Supabase (recomendado para producción real), necesitas:
+1. Crear las tablas `profiles`, `comments`, `likes`, `subscriptions`, `notifications` (el SQL completo ya está en este documento, sección "Supabase").
+2. Sustituir las funciones de `js/auth.js`, `js/comments.js`, `js/interactions.js`, `js/notifications.js` y `js/playlists.js` por llamadas a `VN_SUPABASE.from('tabla').select/insert/update/delete(...)`.
+3. La interfaz pública de cada función (`Auth.login()`, `postComment()`, `toggleVideoLike()`, etc.) puede mantenerse igual — solo cambia la implementación interna — así no hace falta tocar las páginas HTML que las usan.
+
+### Claves de localStorage usadas (referencia rápida)
+
+| Clave | Contenido | Módulo |
+|---|---|---|
+| `vn_users` | Array de usuarios registrados | `js/auth.js` |
+| `vn_session` | Sesión activa (`{userId, loginAt}`) | `js/auth.js` |
+| `vn_videos` | Videos subidos por usuarios | `js/data.js`, `js/upload.js` |
+| `vn_comments` | `{ [videoId]: [comentarios] }` | `js/comments.js` |
+| `vn_notifs_<userId>` | Notificaciones por usuario | `js/notifications.js` |
+| `vn_mock_video_stats` | Likes/dislikes/vistas extra sobre el catálogo de ejemplo (no muta `VIDEOS`) | `js/interactions.js` |
+
 ---
 
 ## 2. Conectar el frontend a Supabase
